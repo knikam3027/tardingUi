@@ -1,124 +1,251 @@
+'use client'
+
+import { useState, useRef } from "react";
 import MainLayout from "@/components/layout/MainLayout";
+import StrikePricesTable from "@/components/StrikePricesTable";
+import AccountSummary from "@/components/AccountSummary";
+import MobileTradingDashboard from "@/components/MobileTradingDashboard";
+import TradingHistory from "@/components/TradingHistory";
+import TradingChart from "@/components/TradingChart";
 
 export default function Home() {
+  const [leftWidth, setLeftWidth] = useState(50);
+  const [tableHeight, setTableHeight] = useState(500);
+  const [isResizable, setIsResizable] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [activeView, setActiveView] = useState<'tables' | 'chart'>('tables');
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!isResizable) return;
+    setIsDragging(true);
+    e.preventDefault();
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !isResizable || !containerRef.current) return;
+    
+    const rect = containerRef.current.getBoundingClientRect();
+    const newLeftWidth = ((e.clientX - rect.left) / rect.width) * 100;
+    
+    if (newLeftWidth >= 20 && newLeftWidth <= 80) {
+      setLeftWidth(Math.round(newLeftWidth));
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
   return (
     <MainLayout>
-      <div className="bg-[#0b1220] min-h-screen text-white">
-
-        {/* ===== RESPONSIVE GRID ===== */}
-        <div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
-
-          {/* ================= LEFT TABLE : ACCOUNT / TRADES ================= */}
-          <div className="border border-gray-700 bg-[#111827] rounded-md overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-[11px] lg:text-xs border-collapse min-w-[600px] lg:min-w-0">
-                <thead className="bg-[#1f2937]">
-                  <tr>
-                    {["STRIKE", "ENTRY", "EXIT", "LOTS", "PRICE", "PTS", "P&L", "TRIG", "S", "B"].map(h => (
-                      <th key={h} className="px-2 py-2 text-left font-bold text-gray-300 border-r border-gray-700 whitespace-nowrap">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-
-                <tbody>
-                  <tr className="bg-[#020617]">
-                    <td className="px-2 py-1 font-bold text-yellow-400">ATM</td>
-                    <td className="px-2 py-1">09:15</td>
-                    <td className="px-2 py-1">12:30</td>
-                    <td className="px-2 py-1">6</td>
-                    <td className="px-2 py-1 font-semibold">206.55</td>
-                    <td className="px-2 py-1 text-green-400">+9.4</td>
-                    <td className="px-2 py-1 text-green-400 font-bold">+3666</td>
-                    <td className="px-2 py-1 bg-yellow-700 text-black font-bold">OLD</td>
-                    <td className="px-2 py-1 text-center">1</td>
-                    <td className="px-2 py-1 text-center">0</td>
-                  </tr>
-
-                  <tr className="border-t border-gray-800">
-                    <td className="px-2 py-1 font-bold">OTM1</td>
-                    <td className="px-2 py-1">11:40</td>
-                    <td className="px-2 py-1">15:10</td>
-                    <td className="px-2 py-1">10</td>
-                    <td className="px-2 py-1 font-semibold">198.35</td>
-                    <td className="px-2 py-1 text-red-400">-43.1</td>
-                    <td className="px-2 py-1 text-green-400 font-bold">+28015</td>
-                    <td className="px-2 py-1 bg-blue-700 text-white font-bold">UDV</td>
-                    <td className="px-2 py-1 text-center">0</td>
-                    <td className="px-2 py-1 text-center">1</td>
-                  </tr>
-                </tbody>
-              </table>
-
-              {/* ACCOUNT SUMMARY FOOTER */}
-              <div className="border-t border-gray-700 bg-[#020617] text-[11px]">
-                <div className="grid grid-cols-6 px-2 py-1">
-                  <span className="text-gray-400">CAPITAL</span>
-                  <span className="text-green-400 font-bold">₹234831</span>
-                  <span className="text-gray-400">DAY P&L</span>
-                  <span className="text-green-400 font-bold">₹31681</span>
-                  <span />
-                  <span />
+      <div 
+        className="bg-[#0b1220] min-h-screen text-white p-2 md:p-4 select-none"
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+      >
+        
+        {/* Header Controls */}
+        <div className="mb-4 flex flex-wrap gap-3 items-center justify-between">
+          <div className="flex items-center gap-4">
+            <h1 className="text-lg font-bold text-gray-200 flex items-center gap-2">
+              📈 Trading Dashboard
+              <span className="text-xs bg-green-600 px-2 py-1 rounded-full">LIVE</span>
+            </h1>
+            
+            {/* View Switcher */}
+            <div className="hidden lg:flex gap-1 bg-gray-800 rounded-lg p-1">
+              <button
+                onClick={() => setActiveView('tables')}
+                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                  activeView === 'tables'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                }`}
+              >
+                📋 Tables
+              </button>
+              <button
+                onClick={() => setActiveView('chart')}
+                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                  activeView === 'chart'
+                    ? 'bg-green-600 text-white'
+                    : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                }`}
+              >
+                📈 Charts
+              </button>
+            </div>
+          </div>
+          
+          {/* Desktop Controls */}
+          <div className="hidden lg:flex flex-wrap gap-2 items-center">
+            <button
+              onClick={() => setIsResizable(!isResizable)}
+              className={`px-3 py-1 rounded text-xs transition-colors flex items-center gap-1 ${
+                isResizable ? 'bg-blue-600 text-white' : 'bg-gray-600 text-gray-200'
+              }`}
+            >
+              🔧 {isResizable ? 'Lock Layout' : 'Unlock Layout'}
+            </button>
+            
+            {isResizable && (
+              <>
+                <div className="flex items-center gap-2 text-xs">
+                  <label className="text-gray-400">Width:</label>
+                  <input
+                    type="range"
+                    min="20"
+                    max="80"
+                    value={leftWidth}
+                    onChange={(e) => setLeftWidth(Number(e.target.value))}
+                    className="w-20"
+                  />
+                  <span className="text-gray-300 w-8">{leftWidth}%</span>
                 </div>
+                
+                <div className="flex items-center gap-2 text-xs">
+                  <label className="text-gray-400">Height:</label>
+                  <input
+                    type="range"
+                    min="300"
+                    max="800"
+                    value={tableHeight}
+                    onChange={(e) => setTableHeight(Number(e.target.value))}
+                    className="w-20"
+                  />
+                  <span className="text-gray-300 w-12">{tableHeight}px</span>
+                </div>
+              </>
+            )}
 
-                <div className="px-2 py-1 text-gray-500">
-                  HIST: ₹106925 | ₹-61893 | ₹-7046 | ₹-9445 | ₹28119
+            <div className="flex gap-1">
+              <button
+                onClick={() => { setLeftWidth(50); setTableHeight(500); }}
+                className="px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded transition-colors"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Dashboard Component */}
+        <MobileTradingDashboard />
+
+        {/* Desktop Layout */}
+        <div className="hidden lg:block">
+          {activeView === 'tables' ? (
+            <>
+              <div 
+                ref={containerRef}
+                className="flex gap-1 transition-all duration-300 relative"
+              >
+                <div 
+                  className="transition-all duration-300 overflow-hidden"
+                  style={{ 
+                    width: `${leftWidth}%`,
+                    height: `${tableHeight}px`
+                  }}
+                >
+                  <StrikePricesTable className="h-full" />
+                </div>
+                
+                {/* Resizer Handle */}
+                {isResizable && (
+                  <div
+                    onMouseDown={handleMouseDown}
+                    className={`w-1 bg-gray-600 hover:bg-blue-500 cursor-col-resize transition-colors z-10 ${
+                      isDragging ? 'bg-blue-500' : ''
+                    }`}
+                    title="Drag to resize"
+                  />
+                )}
+                
+                <div 
+                  className="transition-all duration-300 overflow-hidden"
+                  style={{ 
+                    width: `${100 - leftWidth}%`,
+                    height: `${tableHeight}px`
+                  }}
+                >
+                  <AccountSummary className="h-full" />
+                </div>
+              </div>
+
+              {/* Trading History Section */}
+              <div className="mt-4">
+                <TradingHistory />
+              </div>
+            </>
+          ) : (
+            /* Chart View */
+            <div className="space-y-4">
+              <TradingChart style={{ height: `${tableHeight + 100}px` }} />
+              
+              {/* Chart-specific controls */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <TradingHistory />
+                <div className="bg-[#111827] border border-gray-700 rounded-lg p-4">
+                  <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                    📊 Market Analysis
+                  </h3>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Trend:</span>
+                      <span className="text-green-400 font-semibold">BULLISH</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Support:</span>
+                      <span className="text-blue-400 font-semibold">25,750</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Resistance:</span>
+                      <span className="text-red-400 font-semibold">26,100</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Volatility:</span>
+                      <span className="text-orange-400 font-semibold">MEDIUM</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
+          )}
+        </div>
+
+        {/* Auto Action Buttons - Desktop */}
+        <div className="hidden lg:flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-700">
+          <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm transition-colors flex items-center gap-2">
+            🤖 Auto Buy
+          </button>
+          <button className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors flex items-center gap-2">
+            🤖 Auto Sell
+          </button>
+          <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors flex items-center gap-2">
+            ⚡ Square Off All
+          </button>
+          <button className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm transition-colors flex items-center gap-2">
+            🔄 Refresh Data
+          </button>
+          <button className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm transition-colors flex items-center gap-2">
+            📊 Analytics
+          </button>
+        </div>
+
+        {/* Status Bar - Desktop */}
+        <div className="hidden lg:flex flex-wrap gap-4 items-center justify-between text-xs text-gray-400 pt-2 border-t border-gray-800 mt-2">
+          <div className="flex gap-4">
+            <span>📅 {new Date().toLocaleDateString()}</span>
+            <span>🕐 Last Updated: {new Date().toLocaleTimeString()}</span>
+            <span className="text-green-400">🟢 Connected</span>
           </div>
-
-          {/* ================= RIGHT TABLE : STRIKE / MARKET ================= */}
-          <div className="border border-gray-700 bg-[#020617] rounded-md overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-[11px] border-collapse min-w-[600px] lg:min-w-0">
-                <thead className="bg-[#1d4ed8]">
-                  <tr>
-                    {["STRIKE", "OPEN", "LTP", "CHANGE", "LEAD", "REGIME", "IND.REG", "T.MODE", "T.TYPE"].map(h => (
-                      <th key={h} className="px-2 py-1 text-left font-bold text-white border-r border-blue-900 whitespace-nowrap">
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {[
-                    ["25700", "263", "192.8", "-70.2", "PE ▼", "BEARISH", "Bullish", "BUY CE", "Buy PE"],
-                    ["25800", "218.85", "194.8", "-24.05", "PE ▼", "BEARISH", "NoTrend", "SHORT", "Sell CE"],
-                    ["25850", "-404", "210.6", "+7.0", "PE ▲", "SHORT COV", "Neutral", "LONG STR", "Buy PE"],
-                    ["25900", "195.95", "234.65", "+38.7", "PE ▲", "SHORT COV", "Bearish", "LONG STR", "Buy PE"],
-                    ["26000", "203.8", "302.7", "+98.9", "PE ▲", "SHORT COV", "Bearish", "LONG STR", "Buy PE"],
-                  ].map((r, i) => (
-                    <tr key={i} className="border-t border-gray-800">
-                      <td className="px-2 py-1 text-gray-400">{r[0]}</td>
-                      <td className="px-2 py-1 text-gray-400">{r[1]}</td>
-                      <td className="px-2 py-1 font-bold">{r[2]}</td>
-                      <td className={`px-2 py-1 font-bold ${r[3].startsWith("+") ? "text-green-400" : "text-red-400"}`}>
-                        {r[3]}
-                      </td>
-                      <td className="px-2 py-1">{r[4]}</td>
-                      <td className="px-2 py-1 bg-red-700 text-white font-bold text-[10px]">{r[5]}</td>
-                      <td className="px-2 py-1 text-green-400">{r[6]}</td>
-                      <td className="px-2 py-1 text-blue-400 font-semibold">{r[7]}</td>
-                      <td className="px-2 py-1 text-green-400 font-semibold">{r[8]}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              {/* INDICATOR FOOTER */}
-              <div className="border-t border-gray-700 bg-[#020617] text-[11px] lg:text-xs px-2 py-2 flex flex-wrap gap-3 lg:gap-6">
-                <span className="text-red-400 font-bold">ROC -4.1</span>
-                <span className="text-white font-bold">RSI 46</span>
-                <span className="text-green-400 font-bold">DI 33</span>
-                <span className="text-gray-500">+DI 25</span>
-                <span className="text-gray-500">CHOP 51</span>
-              </div>
-            </div>
+          <div className="flex gap-4">
+            <span>NIFTY: 25,850 (+0.8%)</span>
+            <span>BANK NIFTY: 53,420 (-0.3%)</span>
+            <span>VIX: 14.2</span>
           </div>
-
         </div>
       </div>
     </MainLayout>
