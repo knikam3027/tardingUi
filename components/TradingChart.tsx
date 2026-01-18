@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 
-const TradingChart = ({ className = "" }: { className?: string }) => {
+const TradingChart = ({ className = "", style = {} }: { className?: string; style?: React.CSSProperties }) => {
   const [activeIndex, setActiveIndex] = useState<'NIFTY' | 'SENSEX' | 'BANKNIFTY'>('NIFTY');
   const [timeframe, setTimeframe] = useState<'1m' | '5m' | '15m' | '1h' | '1d'>('5m');
   const [chartType, setChartType] = useState<'candlestick' | 'line'>('candlestick');
@@ -33,7 +33,7 @@ const TradingChart = ({ className = "" }: { className?: string }) => {
   const candlesticks = generateCandlesticks();
 
   return (
-    <div className={`bg-[#0f172a] border border-gray-700 rounded-lg overflow-hidden ${className}`}>
+    <div className={`bg-[#0f172a] border border-gray-700 rounded-lg overflow-hidden ${className}`} style={style}>
       {/* Chart Header */}
       <div className="bg-[#1e293b] p-3 border-b border-gray-700">
         <div className="flex items-center justify-between flex-wrap gap-3">
