@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  trading-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: trading-ui
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    networks:
+      - trading-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.trading-ui.rule=Host(`cbamoon.com`)"
+      - "traefik.http.routers.trading-ui.tls=true"
+      - "traefik.http.routers.trading-ui.tls.certresolver=letsencrypt"
+      - "traefik.http.services.trading-ui.loadbalancer.server.port=3000"
+
+  nginx:
+    image: nginx:alpine
+    container_name: trading-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - /var/log/nginx:/var/log/nginx
+    depends_on:
+      - trading-ui
+    networks:
+      - trading-network
+
+networks:
+  trading-network:
+    driver: bridge
