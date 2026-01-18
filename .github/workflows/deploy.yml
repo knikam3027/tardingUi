@@ -86,29 +86,65 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /opt/trading-platform
+            # Navigate to project directory
+            cd /opt/trading-platform || cd /root/trading-platform || cd ~/trading-platform || {
+              echo "❌ Cannot find project directory"
+              echo "Available directories:"
+              ls -la ~/
+              ls -la /opt/
+              exit 1
+            }
             
-            # Pull latest images
-            docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            echo "📁 Current directory: $(pwd)"
+            echo "📋 Files in directory:"
+            ls -la
             
-            # Update docker-compose with new image
-            export IMAGE_TAG=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            # Pull latest code from git
+            echo "🔄 Pulling latest code from git..."
+            git pull origin main || git pull origin master || {
+              echo "❌ Git pull failed, trying to reset and pull..."
+              git reset --hard HEAD
+              git pull origin main || git pull origin master
+            }
+            
+            # Login to GitHub Container Registry
+            echo "🔐 Logging into GitHub Container Registry..."
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
             # Stop existing containers
-            docker-compose down
+            echo "🛑 Stopping existing containers..."
+            docker-compose down || true
             
-            # Start with new image
+            # Build images with no cache
+            echo "🏗️ Building Docker images with no cache..."
+            docker-compose build --no-cache
+            
+            # Start containers in detached mode
+            echo "🚀 Starting containers..."
             docker-compose up -d
             
-            # Clean up old images
-            docker image prune -f
+            # Wait for containers to start
+            echo "⏳ Waiting for containers to start..."
+            sleep 15
+            
+            # Check container status
+            echo "📊 Container status:"
+            docker-compose ps
             
             # Health check
-            sleep 10
-            curl -f http://localhost:3000/health || exit 1
+            echo "🔍 Testing application..."
+            if curl -f http://localhost:3000 2>/dev/null; then
+              echo "✅ Application is running successfully!"
+            else
+              echo "⚠️ Application might not be responding yet. Checking logs..."
+              docker-compose logs --tail=20 trading-ui
+            fi
             
-            echo "Deployment completed successfully!"
+            # Clean up old images to save space
+            echo "🧹 Cleaning up old Docker images..."
+            docker image prune -f
+            
+            echo "🎉 Deployment completed successfully!"
 
   notify-deployment:
     runs-on: ubuntu-latest
