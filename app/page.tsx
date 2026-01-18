@@ -182,7 +182,9 @@ export default function Home() {
           ) : (
             /* Chart View */
             <div className="space-y-4">
-              <TradingChart style={{ height: `${tableHeight + 100}px` }} />
+              <div style={{ height: `${tableHeight + 100}px` }}>
+                <TradingChart className="h-full" />
+              </div>
               
               {/* Chart-specific controls */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
