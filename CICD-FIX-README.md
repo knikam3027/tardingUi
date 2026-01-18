@@ -89,4 +89,12 @@ Your deployment should now work with the simple flow you wanted:
 - View deployment logs: `tail -f /var/log/trading-ui-deploy.log` (for auto-deploy.sh)
 - Check container status: `docker-compose ps`
 
+## Your Domain Setup
+
+Your application will be available at:
+- **Production**: https://cbamoon.com
+- **Direct Access**: http://YOUR-VPS-IP:3000
+
+The nginx configuration is already set up for SSL with your domain.
+
 Let me know if you encounter any issues!

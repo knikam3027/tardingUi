@@ -50,7 +50,8 @@ docker-compose ps
 echo "🔍 Testing application..."
 if curl -f http://localhost:3000 2>/dev/null || curl -f http://localhost:3000/health 2>/dev/null; then
     echo "✅ Application is running successfully!"
-    echo "🌐 Access your app at: http://$(curl -s ifconfig.me 2>/dev/null || echo 'YOUR-VPS-IP'):3000"
+    echo "🌐 Your app is live at: https://cbamoon.com"
+    echo "🔗 Local access: http://$(curl -s ifconfig.me 2>/dev/null || echo 'YOUR-VPS-IP'):3000"
 else
     echo "⚠️ Application might not be responding yet. Checking logs..."
     docker-compose logs --tail=20 trading-ui

@@ -62,7 +62,7 @@ docker-compose ps | tee -a "$LOG_FILE"
 # Health check
 log "🔍 Testing application..."
 if curl -f http://localhost:3000 >/dev/null 2>&1; then
-    log "✅ Application is running successfully!"
+    log "✅ Application is running successfully at https://cbamoon.com!"
 else
     log "⚠️ Application might not be responding yet. Recent logs:"
     docker-compose logs --tail=10 trading-ui | tee -a "$LOG_FILE"
@@ -73,9 +73,10 @@ log "🧹 Cleaning up old Docker images..."
 docker image prune -f >/dev/null 2>&1
 
 log "🎉 Automatic deployment completed!"
+log "🌐 Your app is live at: https://cbamoon.com"
 log "=" | tr '=' '='| head -c 50 && echo
 
 # Optional: Send notification (uncomment if you want notifications)
 # curl -X POST -H 'Content-type: application/json' \
-#     --data '{"text":"🚀 Trading UI deployed successfully!"}' \
+#     --data '{"text":"🚀 Trading UI deployed successfully at https://cbamoon.com!"}' \
 #     YOUR_SLACK_WEBHOOK_URL

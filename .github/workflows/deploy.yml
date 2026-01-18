@@ -135,6 +135,7 @@ jobs:
             echo "🔍 Testing application..."
             if curl -f http://localhost:3000 2>/dev/null; then
               echo "✅ Application is running successfully!"
+              echo "🌐 Live at: https://cbamoon.com"
             else
               echo "⚠️ Application might not be responding yet. Checking logs..."
               docker-compose logs --tail=20 trading-ui
