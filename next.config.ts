@@ -30,7 +30,12 @@ const nextConfig: NextConfig = {
   
   // Image optimization
   images: {
-    domains: ['cbamoon.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'cbamoon.com',
+      },
+    ],
     formats: ['image/webp', 'image/avif']
   },
   
