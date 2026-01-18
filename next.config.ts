@@ -5,7 +5,6 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   
   // Optimize for production
-  swcMinify: true,
   compress: true,
   
   // Security headers
