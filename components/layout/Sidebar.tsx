@@ -75,20 +75,33 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileMenuOpen, onSettingsClick, on
 
         {/* Kill Switch */}
         <div className="mb-6">
-          <button
-            onClick={handleKillSwitch}
-            className={`w-full flex items-center justify-center space-x-2 p-3 rounded-lg border-2 transition-colors ${
-              killSwitchActive 
-                ? 'border-red-500 bg-red-50 text-red-700 cursor-not-allowed' 
-                : 'border-red-500 bg-red-500 text-white hover:bg-red-600'
-            }`}
-            disabled={killSwitchActive}
-          >
-            <ShieldX className={`w-5 h-5 ${killSwitchActive ? 'text-red-500' : 'text-white'}`} />
-            <span className="font-semibold">
-              {killSwitchActive ? 'TRADING DISABLED' : 'KILL SWITCH'}
-            </span>
-          </button>
+          {!killSwitchActive ? (
+            // Show Kill Switch when trading is active
+            <button
+              onClick={handleKillSwitch}
+              className="w-full flex items-center justify-center space-x-2 p-3 rounded-lg border-2 border-red-500 bg-red-500 text-white hover:bg-red-600 transition-colors"
+            >
+              <ShieldX className="w-5 h-5 text-white" />
+              <span className="font-semibold">KILL SWITCH</span>
+            </button>
+          ) : (
+            // Show both disabled status and enable button when trading is disabled
+            <div className="space-y-2">
+              <div className="w-full flex items-center justify-center space-x-2 p-3 rounded-lg border-2 border-red-500 bg-red-50 text-red-700">
+                <ShieldX className="w-5 h-5 text-red-500" />
+                <span className="font-semibold">TRADING DISABLED</span>
+              </div>
+              <button
+                onClick={() => {
+                  setKillSwitchActive(false);
+                  console.log('Trading enabled');
+                }}
+                className="w-full p-2 rounded-lg bg-green-500 text-white hover:bg-green-600 transition-colors text-sm font-medium"
+              >
+                Enable Trading
+              </button>
+            </div>
+          )}
           <p className="text-xs text-gray-500 mt-2 text-center">
             {killSwitchActive 
               ? 'Trading disabled until next day' 
