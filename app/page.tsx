@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import StrikePricesTable from "@/components/StrikePricesTable";
 import AccountSummary from "@/components/AccountSummary";
@@ -14,7 +14,20 @@ export default function Home() {
   const [isResizable, setIsResizable] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [activeView, setActiveView] = useState<'tables' | 'chart'>('tables');
+  const [engineRunning, setEngineRunning] = useState(false);
+  const [holdMode, setHoldMode] = useState(false);
+  const [showQTPPopup, setShowQTPPopup] = useState(false);
+  const [qtpIndex, setQTPIndex] = useState('NIFTY');
+  const [qtpDays, setQTPDays] = useState('5');
+  const [qtpStrikes, setQTPStrikes] = useState({
+    S1: false, S2: true, S3: true, S4: true, S5: false
+  });
+  const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!isResizable) return;
@@ -36,6 +49,28 @@ export default function Home() {
   const handleMouseUp = () => {
     setIsDragging(false);
   };
+
+  const handleEngineToggle = () => {
+    setEngineRunning(!engineRunning);
+    if (engineRunning) {
+      console.log('Engine stopped - booking all trades');
+    } else {
+      console.log('Engine started');
+    }
+  };
+
+  const handleSquareOffAll = () => {
+    console.log('Square off all positions');
+  };
+
+  const handleQTPAction = (action: 'LE' | 'LX' | 'SE' | 'SX') => {
+    console.log(`QTP ${action} for ${qtpIndex} with selected strikes`);
+    setShowQTPPopup(false);
+  };
+
+  if (!mounted) {
+    return null; // Prevent hydration mismatch
+  }
 
   return (
     <MainLayout>
@@ -219,28 +254,175 @@ export default function Home() {
 
         {/* Auto Action Buttons - Desktop */}
         <div className="hidden lg:flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-700">
-          <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm transition-colors flex items-center gap-2">
-            🤖 Auto Buy
+          {/* Engine Control */}
+          <button 
+            onClick={handleEngineToggle}
+            className={`px-4 py-2 rounded text-sm transition-colors flex items-center gap-2 ${
+              engineRunning 
+                ? 'bg-red-600 hover:bg-red-700 text-white' 
+                : 'bg-green-600 hover:bg-green-700 text-white'
+            }`}
+          >
+            {engineRunning ? '⏹️ Stop Engine' : '▶️ Start Engine'}
           </button>
-          <button className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded text-sm transition-colors flex items-center gap-2">
-            🤖 Auto Sell
-          </button>
-          <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors flex items-center gap-2">
+
+          {/* Square Off All */}
+          <button 
+            onClick={handleSquareOffAll}
+            className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded text-sm transition-colors flex items-center gap-2"
+          >
             ⚡ Square Off All
           </button>
+
+          {/* Hold Checkbox */}
+          <label className="flex items-center space-x-2 px-4 py-2 bg-gray-700 rounded text-sm">
+            <input 
+              type="checkbox" 
+              checked={holdMode}
+              onChange={(e) => setHoldMode(e.target.checked)}
+              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" 
+            />
+            <span className="text-white">Hold (3 candles)</span>
+          </label>
+
+          {/* QTP Button */}
+          <button 
+            onClick={() => setShowQTPPopup(true)}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm transition-colors flex items-center gap-2"
+          >
+            🎯 QTP
+          </button>
+
           <button className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm transition-colors flex items-center gap-2">
             🔄 Refresh Data
           </button>
-          <button className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm transition-colors flex items-center gap-2">
+          <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors flex items-center gap-2">
             📊 Analytics
           </button>
         </div>
 
+        {/* QTP Popup */}
+        {showQTPPopup && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 w-96 max-h-[80vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-white font-bold text-lg">Quick Trade Panel</h3>
+                <button 
+                  onClick={() => setShowQTPPopup(false)}
+                  className="text-gray-400 hover:text-white text-xl"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                {/* Index Selection */}
+                <div>
+                  <label className="block text-sm text-gray-300 mb-2">Select Index</label>
+                  <select 
+                    value={qtpIndex} 
+                    onChange={(e) => setQTPIndex(e.target.value)}
+                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white"
+                  >
+                    <option value="NIFTY">NIFTY</option>
+                    <option value="BANKNIFTY">BANKNIFTY</option>
+                    <option value="FINNIFTY">FINNIFTY</option>
+                  </select>
+                </div>
+
+                {/* Strike Prices Selection */}
+                <div>
+                  <label className="block text-sm text-gray-300 mb-2">Select Strike Prices</label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {Object.entries(qtpStrikes).map(([key, value]) => (
+                      <label key={key} className="flex items-center space-x-1">
+                        <input 
+                          type="checkbox" 
+                          checked={value}
+                          onChange={(e) => setQTPStrikes(prev => ({ ...prev, [key]: e.target.checked }))}
+                          className="w-4 h-4 text-blue-600 rounded" 
+                        />
+                        <span className="text-sm text-gray-300">{key}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Days Selection */}
+                <div>
+                  <label className="block text-sm text-gray-300 mb-2">Days to Run Strategy</label>
+                  <input
+                    type="text"
+                    value={qtpDays}
+                    onChange={(e) => setQTPDays(e.target.value)}
+                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white"
+                    placeholder="Enter number of days"
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div>
+                  <label className="block text-sm text-gray-300 mb-2">Select Action</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => handleQTPAction('LE')}
+                      className="bg-green-600 hover:bg-green-700 text-white py-2 rounded font-bold"
+                    >
+                      LE (Long Entry)
+                    </button>
+                    <button
+                      onClick={() => handleQTPAction('LX')}
+                      className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-bold"
+                    >
+                      LX (Long Exit)
+                    </button>
+                    <button
+                      onClick={() => handleQTPAction('SE')}
+                      className="bg-orange-600 hover:bg-orange-700 text-white py-2 rounded font-bold"
+                    >
+                      SE (Short Entry)
+                    </button>
+                    <button
+                      onClick={() => handleQTPAction('SX')}
+                      className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-bold"
+                    >
+                      SX (Short Exit)
+                    </button>
+                  </div>
+                </div>
+
+                {/* Back Test Results Placeholder */}
+                <div className="border-t border-gray-600 pt-4">
+                  <h4 className="text-sm text-gray-300 mb-2">Back Test Results</h4>
+                  <div className="bg-gray-700 rounded p-3 text-sm text-gray-300">
+                    <div className="flex justify-between">
+                      <span>Total Trades:</span>
+                      <span className="text-white">24</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Win Rate:</span>
+                      <span className="text-green-400">68%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Total P&L:</span>
+                      <span className="text-green-400">₹45,230</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Max Drawdown:</span>
+                      <span className="text-red-400">₹8,450</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Status Bar - Desktop */}
         <div className="hidden lg:flex flex-wrap gap-4 items-center justify-between text-xs text-gray-400 pt-2 border-t border-gray-800 mt-2">
           <div className="flex gap-4">
-            <span>📅 {new Date().toLocaleDateString()}</span>
-            <span>🕐 Last Updated: {new Date().toLocaleTimeString()}</span>
+            <span>📅 {mounted ? new Date().toLocaleDateString() : '--'}</span>
+            <span>🕐 Last Updated: {mounted ? new Date().toLocaleTimeString() : '--:--:--'}</span>
             <span className="text-green-400">🟢 Connected</span>
           </div>
           <div className="flex gap-4">

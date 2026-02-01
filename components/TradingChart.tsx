@@ -1,11 +1,75 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const TradingChart = ({ className = "", style = {} }: { className?: string; style?: React.CSSProperties }) => {
   const [activeIndex, setActiveIndex] = useState<'NIFTY' | 'SENSEX' | 'BANKNIFTY'>('NIFTY');
   const [timeframe, setTimeframe] = useState<'1m' | '5m' | '15m' | '1h' | '1d'>('5m');
   const [chartType, setChartType] = useState<'candlestick' | 'line'>('candlestick');
+  const [countdown, setCountdown] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Countdown timer for candle completion
+  useEffect(() => {
+    if (!mounted) return;
+    
+    const getTimeframeSeconds = () => {
+      switch(timeframe) {
+        case '1m': return 60;
+        case '5m': return 300;
+        case '15m': return 900;
+        case '1h': return 3600;
+        case '1d': return 86400;
+        default: return 300;
+      }
+    };
+
+    const updateCountdown = () => {
+      const now = new Date();
+      const timeframeSeconds = getTimeframeSeconds();
+      let secondsElapsed = 0;
+      
+      if (timeframe === '1d') {
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 15, 0);
+        secondsElapsed = Math.floor((now.getTime() - startOfDay.getTime()) / 1000);
+      } else if (timeframe === '1h') {
+        secondsElapsed = now.getMinutes() * 60 + now.getSeconds();
+      } else {
+        const minutes = timeframe === '1m' ? 1 : timeframe === '5m' ? 5 : 15;
+        secondsElapsed = (now.getMinutes() % minutes) * 60 + now.getSeconds();
+      }
+      
+      const remaining = timeframeSeconds - (secondsElapsed % timeframeSeconds);
+      setCountdown(remaining);
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [timeframe, mounted]);
+
+  const formatCountdown = (seconds: number) => {
+    if (seconds >= 3600) {
+      const hours = Math.floor(seconds / 3600);
+      const mins = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    } else {
+      const mins = Math.floor(seconds / 60);
+      const secs = seconds % 60;
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+  };
+
+  if (!mounted) {
+    return <div className={`${className} bg-[#0f172a] border border-gray-700 rounded-lg`} style={style}>
+      <div className="p-4 text-center text-gray-400">Loading chart...</div>
+    </div>;
+  }
 
   // Mock chart data - in real app, this would come from API
   const chartData = {
@@ -54,12 +118,20 @@ const TradingChart = ({ className = "", style = {} }: { className?: string; styl
             ))}
           </div>
 
-          {/* Price Display */}
+          {/* Price Display with Countdown */}
           <div className="flex items-center gap-4">
             <div className="text-center">
               <div className="text-sm font-bold text-white">{chartData[activeIndex].price.toLocaleString()}</div>
               <div className={`text-xs font-semibold ${chartData[activeIndex].color}`}>
                 {chartData[activeIndex].change > 0 ? '+' : ''}{chartData[activeIndex].change}%
+              </div>
+            </div>
+            
+            {/* Countdown Timer */}
+            <div className="text-center border-l border-gray-600 pl-4">
+              <div className="text-xs text-gray-400">Next Candle</div>
+              <div className="text-sm font-bold text-cyan-400">
+                {formatCountdown(countdown)}
               </div>
             </div>
           </div>
@@ -228,20 +300,90 @@ const TradingChart = ({ className = "", style = {} }: { className?: string; styl
         </div>
       </div>
 
-      {/* Chart Controls */}
-      <div className="bg-[#1e293b] p-2 border-t border-gray-700 flex items-center justify-between text-xs">
-        <div className="flex gap-4 text-gray-400">
-          <span>📊 Volume: 2.4M</span>
-          <span>🕒 Last Update: {new Date().toLocaleTimeString()}</span>
+      {/* Chart Controls & Enhanced Indicators */}
+      <div className="bg-[#1e293b] border-t border-gray-700">
+        {/* Technical Indicators Section */}
+        <div className="p-3 border-b border-gray-700">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+            {/* Basic Indicators */}
+            <div className="space-y-1">
+              <div className="flex justify-between">
+                <span className="text-gray-400">EMA(20):</span>
+                <span className="text-blue-400 font-semibold">25,842</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">RSI:</span>
+                <span className="text-yellow-400 font-semibold">46.2</span>
+              </div>
+            </div>
+            
+            {/* ADX Indicators */}
+            <div className="space-y-1">
+              <div className="flex justify-between">
+                <span className="text-gray-400">ADX:</span>
+                <span className="text-cyan-400 font-semibold">29.5</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">+DI:</span>
+                <span className="text-green-400 font-semibold">25.8</span>
+              </div>
+            </div>
+            
+            {/* More Indicators */}
+            <div className="space-y-1">
+              <div className="flex justify-between">
+                <span className="text-gray-400">-DI:</span>
+                <span className="text-red-400 font-semibold">33.2</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">ROC:</span>
+                <span className="text-orange-400 font-semibold">-4.1</span>
+              </div>
+            </div>
+            
+            {/* Volume & VWAP */}
+            <div className="space-y-1">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Volume:</span>
+                <span className="text-purple-400 font-semibold">2.4M</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">VWAP:</span>
+                <span className="text-indigo-400 font-semibold">25,835</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Trend Analysis */}
+          <div className="mt-3 pt-3 border-t border-gray-600">
+            <div className="flex justify-between items-center text-xs">
+              <div className="flex gap-4">
+                <span className="text-gray-400">Trend: <span className="text-green-400 font-semibold">BULLISH</span></span>
+                <span className="text-gray-400">Support: <span className="text-blue-400 font-semibold">25,750</span></span>
+                <span className="text-gray-400">Resistance: <span className="text-red-400 font-semibold">26,100</span></span>
+              </div>
+              <div className="text-gray-400">
+                Volatility: <span className="text-orange-400 font-semibold">MEDIUM</span>
+              </div>
+            </div>
+          </div>
         </div>
         
-        <div className="flex gap-2">
-          <button className="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors">
-            📸 Screenshot
-          </button>
-          <button className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">
-            🔄 Auto Refresh
-          </button>
+        {/* Controls Section */}
+        <div className="p-2 flex items-center justify-between text-xs">
+          <div className="flex gap-4 text-gray-400">
+            <span>🕒 Last Update: {mounted ? new Date().toLocaleTimeString() : '--:--:--'}</span>
+            <span>📊 Total Volume: 2.4M</span>
+          </div>
+          
+          <div className="flex gap-2">
+            <button className="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors">
+              📸 Screenshot
+            </button>
+            <button className="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">
+              🔄 Auto Refresh
+            </button>
+          </div>
         </div>
       </div>
     </div>
