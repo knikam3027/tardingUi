@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from "react";
-import { BarChart3, TrendingUp, Settings, User, ShieldX } from "lucide-react";
+import { BarChart3, TrendingUp, Settings, User, ShieldX, FileText } from "lucide-react";
 
 interface ChatMessage {
   id: number;
@@ -137,8 +137,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileMenuOpen, onSettingsClick, on
   };
   
   const menuItems = [
-    { name: "Dashboard", icon: BarChart3, href: "/", action: null },
-    { name: "Trades", icon: TrendingUp, href: null, action: onTradingClick },
+    { name: "Dashboard", icon: BarChart3, href: "/", action: undefined },
+    { name: "Trades", icon: TrendingUp, href: undefined, action: onTradingClick },
   ];
 
   const handleMenuClick = (callback?: () => void) => {
@@ -246,6 +246,17 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileMenuOpen, onSettingsClick, on
               </li>
             );
           })}
+
+          {/* My Trades */}
+          <li>
+            <button
+              onClick={() => handleMenuClick(() => window.location.href = '/trades')}
+              className="flex items-center space-x-3 w-full rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+            >
+              <FileText size={18} className="w-[18px] h-[18px]" />
+              <span>My Trades</span>
+            </button>
+          </li>
           
           {/* Settings as sidebar item for mobile */}
           <li>
@@ -253,7 +264,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileMenuOpen, onSettingsClick, on
               onClick={() => handleMenuClick(onSettingsClick)}
               className="flex items-center space-x-3 w-full rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
             >
-              <Settings size={18} />
+              <Settings size={18} className="w-[18px] h-[18px]" />
               <span>Settings</span>
             </button>
           </li>
