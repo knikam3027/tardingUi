@@ -1,9 +1,29 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const TradingHistory = ({ className = "" }: { className?: string }) => {
+  const [mounted, setMounted] = useState(false);
   const [activeView, setActiveView] = useState<'recent' | 'stats' | 'auto'>('recent');
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <div className={`bg-gray-800 text-white p-4 rounded-lg shadow-lg ${className}`}>
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-700 rounded mb-4 w-1/3"></div>
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-4 bg-gray-700 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const recentTrades = [
     { time: '14:35', type: 'AUTO BUY', strike: '25850 CE', qty: 2, price: 210.6, pnl: '+1420', status: 'PROFIT' },

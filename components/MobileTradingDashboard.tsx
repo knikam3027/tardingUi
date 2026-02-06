@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import StrikePricesTable from './StrikePricesTable';
 import AccountSummary from './AccountSummary';
 import TradingChart from './TradingChart';
@@ -8,6 +8,15 @@ import TradingChart from './TradingChart';
 const MobileTradingDashboard = () => {
   const [activeTab, setActiveTab] = useState<'strikes' | 'account' | 'chart'>('strikes');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="lg:hidden">
@@ -116,7 +125,7 @@ const MobileTradingDashboard = () => {
 
       {/* Mobile Status */}
       <div className="mt-3 text-xs text-gray-400 text-center">
-        Last Update: {new Date().toLocaleTimeString()} • 🟢 Live
+        Last Update: {mounted ? new Date().toLocaleTimeString() : '--:--:--'} • 🟢 Live
       </div>
     </div>
   );

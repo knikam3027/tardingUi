@@ -33,6 +33,14 @@ export default function Settings() {
     { id: 5, enabled: false, chart: false, index: true, price: "26100", isATM: false },
   ]);
 
+  // Strategy Tag Section
+  const [strategyTag, setStrategyTag] = useState("DefaultStrategy");
+  
+  // Capital Section  
+  const [totalCapital, setTotalCapital] = useState("500000");
+  const [maxRiskPercent, setMaxRiskPercent] = useState("2");
+  const [dailyLossLimit, setDailyLossLimit] = useState("10000");
+
   // Logic Settings
   const [calcMode, setCalcMode] = useState("Auto");
   const [filterChop, setFilterChop] = useState(true);
@@ -51,6 +59,8 @@ export default function Settings() {
   const [enableShort, setEnableShort] = useState(true);
   const [shortLots, setShortLots] = useState("2");
   const [maxShortTrades, setMaxShortTrades] = useState("0");
+  const [shortStartTime, setShortStartTime] = useState("09:15");
+  const [shortIgnoreLogic, setShortIgnoreLogic] = useState(false);
   const [shortScopes, setShortScopes] = useState({
     S1: false, S2: true, S3: true, S4: true, S5: false
   });
@@ -69,6 +79,8 @@ export default function Settings() {
   const [longLots, setLongLots] = useState("6");
   const [maxLongTrades, setMaxLongTrades] = useState("1");
   const [longStartTime, setLongStartTime] = useState("09:30");
+  const [longIgnoreLogic, setLongIgnoreLogic] = useState(false);
+  const [longADX, setLongADX] = useState("25");
   const [strictEntry, setStrictEntry] = useState(true);
   const [longTimeExitH, setLongTimeExitH] = useState("15");
   const [longTimeExitM, setLongTimeExitM] = useState("10");
@@ -84,6 +96,10 @@ export default function Settings() {
   // Visuals
   const [mainTable, setMainTable] = useState("Hide");
   const [pnlTable, setPnlTable] = useState("Bottom");
+  const [showRegime, setShowRegime] = useState(true);
+  const [showIndReg, setShowIndReg] = useState(true);
+  const [showTMode, setShowTMode] = useState(true);
+  const [showTType, setShowTType] = useState(true);
   const [showSuperTrend, setShowSuperTrend] = useState(false);
   const [superTrendFac, setSuperTrendFac] = useState("3");
   const [superTrendPer, setSuperTrendPer] = useState("10");
@@ -213,7 +229,65 @@ export default function Settings() {
               </div>
             </div>
 
-            {/* Section 3: Logic Settings */}
+            {/* Section 3: Strategy Tag */}
+            <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+              <h2 className="text-lg font-semibold mb-4 text-gray-100">Strategy Tag</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Strategy Name</label>
+                  <input 
+                    type="text" 
+                    value={strategyTag}
+                    onChange={(e) => setStrategyTag(e.target.value)}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                    placeholder="Enter strategy name"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 4: Capital */}
+            <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+              <h2 className="text-lg font-semibold mb-4 text-gray-100">Capital Management</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Total Capital</label>
+                  <input 
+                    type="text" 
+                    value={totalCapital}
+                    onChange={(e) => setTotalCapital(e.target.value)}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                    placeholder="500000"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Max Risk %</label>
+                  <input 
+                    type="text" 
+                    value={maxRiskPercent}
+                    onChange={(e) => setMaxRiskPercent(e.target.value)}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                    placeholder="2"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Daily Loss Limit</label>
+                  <input 
+                    type="text" 
+                    value={dailyLossLimit}
+                    onChange={(e) => setDailyLossLimit(e.target.value)}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                    placeholder="10000"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 5: Logic Settings */}
             <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
               <h2 className="text-lg font-semibold mb-4 text-gray-100">Logic Settings</h2>
               
@@ -335,7 +409,7 @@ export default function Settings() {
           {/* Right Column */}
           <div className="space-y-6">
             
-            {/* Section 4: Short Strategy */}
+            {/* Section 6: Short Strategy */}
             <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
               <h2 className="text-lg font-semibold mb-4 text-gray-100">Short Strategy</h2>
               
@@ -361,6 +435,27 @@ export default function Settings() {
                     />
                   </div>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Start Time</label>
+                  <input 
+                    type="text" 
+                    value={shortStartTime}
+                    onChange={(e) => setShortStartTime(e.target.value)}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                    placeholder="09:15"
+                  />
+                </div>
+
+                <label className="flex items-center space-x-2">
+                  <input 
+                    type="checkbox" 
+                    checked={shortIgnoreLogic}
+                    onChange={(e) => setShortIgnoreLogic(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" 
+                  />
+                  <span className="text-sm text-gray-300">Ignore Logic - Consider start time instead</span>
+                </label>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Max Short Trades (0=Unl.)</label>
@@ -475,7 +570,7 @@ export default function Settings() {
               </div>
             </div>
 
-            {/* Section 5: Long Strategy */}
+            {/* Section 7: Long Strategy */}
             <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
               <h2 className="text-lg font-semibold mb-4 text-gray-100">Long Strategy</h2>
               
@@ -518,6 +613,26 @@ export default function Settings() {
                     type="text" 
                     value={longStartTime}
                     onChange={(e) => setLongStartTime(e.target.value)}
+                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                  />
+                </div>
+
+                <label className="flex items-center space-x-2">
+                  <input 
+                    type="checkbox" 
+                    checked={longIgnoreLogic}
+                    onChange={(e) => setLongIgnoreLogic(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" 
+                  />
+                  <span className="text-sm text-gray-300">Ignore Logic - Consider start time instead</span>
+                </label>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">ADX</label>
+                  <input 
+                    type="text" 
+                    value={longADX}
+                    onChange={(e) => setLongADX(e.target.value)}
                     className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" 
                   />
                 </div>
@@ -617,7 +732,7 @@ export default function Settings() {
               </div>
             </div>
 
-            {/* Section 6: Visuals */}
+            {/* Section 8: Visuals */}
             <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
               <h2 className="text-lg font-semibold mb-4 text-gray-100">Visuals</h2>
               
@@ -650,6 +765,52 @@ export default function Settings() {
                       <option value="Left">Left</option>
                       <option value="Right">Right</option>
                     </select>
+                  </div>
+                </div>
+
+                {/* Display Options */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Display Options</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <label className="flex items-center space-x-2">
+                      <input 
+                        type="checkbox" 
+                        checked={showRegime}
+                        onChange={(e) => setShowRegime(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" 
+                      />
+                      <span className="text-sm text-gray-300">Regime</span>
+                    </label>
+                    
+                    <label className="flex items-center space-x-2">
+                      <input 
+                        type="checkbox" 
+                        checked={showIndReg}
+                        onChange={(e) => setShowIndReg(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" 
+                      />
+                      <span className="text-sm text-gray-300">Ind.Reg</span>
+                    </label>
+                    
+                    <label className="flex items-center space-x-2">
+                      <input 
+                        type="checkbox" 
+                        checked={showTMode}
+                        onChange={(e) => setShowTMode(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" 
+                      />
+                      <span className="text-sm text-gray-300">T.mode</span>
+                    </label>
+                    
+                    <label className="flex items-center space-x-2">
+                      <input 
+                        type="checkbox" 
+                        checked={showTType}
+                        onChange={(e) => setShowTType(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" 
+                      />
+                      <span className="text-sm text-gray-300">T.type</span>
+                    </label>
                   </div>
                 </div>
 
