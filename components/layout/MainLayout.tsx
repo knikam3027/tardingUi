@@ -1,15 +1,49 @@
 'use client'
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "./Navbar";
 import Sidebar from "./Sidebar";
+import LoginModal from "../LoginModal";
+import TradingSettingsModal from "../TradingSettingsModal";
 import StrategySettingsModal from "../StrategySettingsModal";
+
+interface User {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  plan: string;
+  avatar?: string;
+}
 
 type Props = { children: React.ReactNode };
 
 const MainLayout: React.FC<Props> = ({ children }) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isStrategyOpen, setIsStrategyOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  // Load user from localStorage on component mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem('tradingUser');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+
+  const handleLogin = (userData: User) => {
+    setUser(userData);
+    localStorage.setItem('tradingUser', JSON.stringify(userData));
+    setIsLoginOpen(false);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('tradingUser');
+    localStorage.removeItem('tradingSettings');
+  };
 
   return (
     <div className="min-h-screen bg-zinc-900">
@@ -17,12 +51,17 @@ const MainLayout: React.FC<Props> = ({ children }) => {
         onSettingsClick={() => setIsSettingsOpen(true)}
         onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         isMobileMenuOpen={isMobileMenuOpen}
+        user={user || undefined}
+        onLogin={() => setIsLoginOpen(true)}
+        onLogout={handleLogout}
       />
       
       <div className="flex">
         <Sidebar 
           isMobileMenuOpen={isMobileMenuOpen}
           onSettingsClick={() => setIsSettingsOpen(true)}
+          onTradingClick={() => setIsStrategyOpen(true)}
+          onAIAssistantClick={() => {}}
           onClose={() => setIsMobileMenuOpen(false)}
         />
         
@@ -42,10 +81,24 @@ const MainLayout: React.FC<Props> = ({ children }) => {
         />
       )}
 
-      {/* Settings Modal */}
-      <StrategySettingsModal 
+      {/* Login Modal */}
+      <LoginModal 
+        isOpen={isLoginOpen}
+        onClose={() => setIsLoginOpen(false)}
+        onLogin={handleLogin}
+      />
+
+      {/* Trading Settings Modal */}
+      <TradingSettingsModal 
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+      />
+
+      {/* Strategy Settings Modal with Trading Tab */}
+      <StrategySettingsModal 
+        isOpen={isStrategyOpen}
+        onClose={() => setIsStrategyOpen(false)}
+        defaultTab="trading"
       />
     </div>
   );

@@ -5,16 +5,224 @@ import { useEffect, useRef, useState } from 'react';
 interface StrategySettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultTab?: 'inputs' | 'style' | 'visibility' | 'trading';
 }
+
+interface TradeExecutionPopupProps {
+  isOpen: boolean;
+  onClose: () => void;
+  tradeType: 'BUY' | 'SELL' | null;
+  selectedStrike?: string;
+}
+
+const TradeExecutionPopup = ({ isOpen, onClose, tradeType, selectedStrike }: TradeExecutionPopupProps) => {
+  const [orderType, setOrderType] = useState<'MARKET' | 'LIMIT' | 'SL' | 'SL-M'>('MARKET');
+  const [quantity, setQuantity] = useState('1');
+  const [price, setPrice] = useState('');
+  const [stopLoss, setStopLoss] = useState('');
+  const [target, setTarget] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const executeTradeOrder = async () => {
+    setIsLoading(true);
+    
+    // Simulate trade execution
+    setTimeout(() => {
+      const orderDetails = {
+        type: tradeType,
+        strike: selectedStrike || '25850',
+        orderType,
+        quantity: parseInt(quantity),
+        price: orderType === 'MARKET' ? 'Market Price' : price,
+        stopLoss,
+        target,
+        timestamp: new Date().toLocaleTimeString()
+      };
+      
+      // Show success message
+      alert(`✅ ${tradeType} Order Placed Successfully!\n\nStrike: ${selectedStrike}\nQuantity: ${quantity} lots\nOrder Type: ${orderType}\nTime: ${orderDetails.timestamp}`);
+      
+      setIsLoading(false);
+      onClose();
+    }, 2000);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4">
+      <div className="bg-[#1e293b] rounded-lg border border-gray-700 w-full max-w-md shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+            {tradeType === 'BUY' ? '🟢 BUY' : '🔴 SELL'} Order
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors text-xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Order Details */}
+        <div className="p-4 space-y-4">
+          <div className="bg-gray-800 rounded-lg p-3">
+            <div className="text-sm text-gray-400">Strike Price</div>
+            <div className="text-lg font-bold text-white">{selectedStrike || '25850'} CE</div>
+            <div className="text-sm text-gray-400">LTP: ₹210.60</div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                Order Type
+              </label>
+              <select
+                value={orderType}
+                onChange={(e) => setOrderType(e.target.value as any)}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white text-sm focus:outline-none focus:border-blue-500"
+              >
+                <option value="MARKET">MARKET</option>
+                <option value="LIMIT">LIMIT</option>
+                <option value="SL">SL</option>
+                <option value="SL-M">SL-M</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                Quantity (Lots)
+              </label>
+              <input
+                type="number"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                min="1"
+                max="10"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white text-sm focus:outline-none focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          {orderType === 'LIMIT' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                Limit Price
+              </label>
+              <input
+                type="number"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                placeholder="Enter price"
+                step="0.05"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white text-sm focus:outline-none focus:border-blue-500"
+              />
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                Stop Loss
+              </label>
+              <input
+                type="number"
+                value={stopLoss}
+                onChange={(e) => setStopLoss(e.target.value)}
+                placeholder="Optional"
+                step="0.05"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white text-sm focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                Target
+              </label>
+              <input
+                type="number"
+                value={target}
+                onChange={(e) => setTarget(e.target.value)}
+                placeholder="Optional"
+                step="0.05"
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md text-white text-sm focus:outline-none focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          {/* Order Summary */}
+          <div className="bg-gray-900 rounded-lg p-3 text-sm">
+            <div className="flex justify-between mb-1">
+              <span className="text-gray-400">Order Value:</span>
+              <span className="text-white">₹{(210.60 * parseInt(quantity) * 50).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between mb-1">
+              <span className="text-gray-400">Margin Required:</span>
+              <span className="text-white">₹{(75000 * parseInt(quantity)).toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Brokerage:</span>
+              <span className="text-white">₹40</span>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={onClose}
+              className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md transition-colors text-sm"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={executeTradeOrder}
+              disabled={isLoading}
+              className={`flex-1 px-4 py-2 rounded-md text-white text-sm transition-colors ${
+                tradeType === 'BUY' 
+                  ? 'bg-green-600 hover:bg-green-700' 
+                  : 'bg-red-600 hover:bg-red-700'
+              } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Placing...
+                </div>
+              ) : (
+                `${tradeType} Order`
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function StrategySettingsModal({
   isOpen,
   onClose,
+  defaultTab = 'inputs',
 }: StrategySettingsModalProps) {
   /* ================= TAB ================= */
-  const [activeTab, setActiveTab] = useState<'inputs' | 'style' | 'visibility'>(
-    'inputs'
+  const [activeTab, setActiveTab] = useState<'inputs' | 'style' | 'visibility' | 'trading'>(
+    defaultTab
   );
+
+  // Trading Popup State
+  const [tradePopup, setTradePopup] = useState<{
+    isOpen: boolean;
+    type: 'BUY' | 'SELL' | null;
+    strike?: string;
+  }>({ isOpen: false, type: null });
+
+  // Reset tab when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(defaultTab);
+    }
+  }, [isOpen, defaultTab]);
 
   /* ================= FORM STATE ================= */
   // Setup: Index & Time
@@ -239,7 +447,7 @@ export default function StrategySettingsModal({
 
         {/* TABS */}
         <div className="flex-shrink-0 flex gap-6 px-4 py-2 border-b border-[#2a2e39]">
-          {['inputs', 'style', 'visibility'].map((t) => (
+          {['inputs', 'style', 'visibility', 'trading'].map((t) => (
             <button
               key={t}
               onClick={() => setActiveTab(t as any)}
@@ -249,7 +457,7 @@ export default function StrategySettingsModal({
                   : 'text-[#787b86] hover:text-white'
               }`}
             >
-              {t.charAt(0).toUpperCase() + t.slice(1)}
+              {t === 'trading' ? '⚡ Trading' : t.charAt(0).toUpperCase() + t.slice(1)}
             </button>
           ))}
         </div>
@@ -977,8 +1185,117 @@ export default function StrategySettingsModal({
               Visibility settings coming soon…
             </div>
           )}
+
+          {activeTab === 'trading' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-white font-semibold">⚡ Quick Trading Panel</h3>
+                <div className="text-xs text-gray-400">Live Market</div>
+              </div>
+
+              {/* Strike Prices with Trading Actions */}
+              <div className="space-y-2">
+                <h4 className="text-sm text-gray-400 mb-3">Available Strikes</h4>
+                
+                {strikes.filter(strike => strike.enabled).map((strike) => (
+                  <div key={strike.id} className="bg-[#2a2e39] rounded-lg p-3 flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="text-white font-medium">
+                        {strike.price} {strike.atm ? '(ATM)' : ''}
+                      </div>
+                      <div className="text-green-400 text-sm">CE: ₹210.60</div>
+                      <div className="text-red-400 text-sm">PE: ₹89.45</div>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setTradePopup({ isOpen: true, type: 'BUY', strike: strike.price })}
+                        className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors"
+                      >
+                        🟢 BUY
+                      </button>
+                      <button
+                        onClick={() => setTradePopup({ isOpen: true, type: 'SELL', strike: strike.price })}
+                        className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition-colors"
+                      >
+                        🔴 SELL
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Quick Action Buttons */}
+              <div className="grid grid-cols-2 gap-3 mt-6">
+                <button
+                  onClick={() => setTradePopup({ isOpen: true, type: 'BUY', strike: '25850' })}
+                  className="px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <span>🤖</span>
+                  <span>Auto Buy ATM</span>
+                </button>
+                <button
+                  onClick={() => setTradePopup({ isOpen: true, type: 'SELL', strike: '25850' })}
+                  className="px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <span>🤖</span>
+                  <span>Auto Sell ATM</span>
+                </button>
+              </div>
+
+              {/* Market Status */}
+              <div className="bg-[#2a2e39] rounded-lg p-3 mt-4">
+                <h4 className="text-sm text-gray-400 mb-2">Market Status</h4>
+                <div className="grid grid-cols-2 gap-4 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">NIFTY:</span>
+                    <span className="text-green-400 font-semibold">25,850 (+0.8%)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">VIX:</span>
+                    <span className="text-orange-400 font-semibold">14.2</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Time:</span>
+                    <span className="text-blue-400 font-semibold">{new Date().toLocaleTimeString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Status:</span>
+                    <span className="text-green-400 font-semibold">● OPEN</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Orders */}
+              <div className="bg-[#2a2e39] rounded-lg p-3">
+                <h4 className="text-sm text-gray-400 mb-2">Recent Orders</h4>
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="text-white">25850 CE BUY × 2</span>
+                    <span className="text-green-400">COMPLETED</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-white">25800 PE SELL × 1</span>
+                    <span className="text-green-400">COMPLETED</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-white">25900 CE BUY × 3</span>
+                    <span className="text-yellow-400">PENDING</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Trade Execution Popup */}
+      <TradeExecutionPopup
+        isOpen={tradePopup.isOpen}
+        onClose={() => setTradePopup({ isOpen: false, type: null })}
+        tradeType={tradePopup.type}
+        selectedStrike={tradePopup.strike}
+      />
     </>
   );
 }
