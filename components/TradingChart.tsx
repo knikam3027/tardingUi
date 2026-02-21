@@ -276,10 +276,14 @@ const TradingChart = ({ className = "", style = {} }: { className?: string; styl
 
         {/* Chart Indicators */}
         <div className="absolute top-2 left-2 bg-black/70 rounded p-2 text-xs">
-          <div className="flex gap-4 text-white">
-            <span>📈 RSI: <span className="text-yellow-400">46</span></span>
-            <span>📊 MACD: <span className="text-green-400">+2.1</span></span>
-            <span>📉 EMA: <span className="text-blue-400">25,820</span></span>
+          <div className="flex gap-4 text-white flex-wrap">
+            <span>📈 RSI: <span className="text-yellow-400 font-bold">46</span></span>
+            <span>📊 MACD: <span className="text-green-400 font-bold">+2.1</span></span>
+            <span>📉 EMA: <span className="text-blue-400 font-bold">25,820</span></span>
+            <span>📍 ADX: <span className="text-cyan-400 font-bold">29</span></span>
+            <span>⬆️ +DI: <span className="text-green-400 font-bold">25</span></span>
+            <span>⬇️ -DI: <span className="text-red-400 font-bold">20</span></span>
+            <span>↗️ ROC: <span className="text-orange-400 font-bold">-4.1</span></span>
           </div>
         </div>
 

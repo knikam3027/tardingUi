@@ -258,6 +258,8 @@ export default function StrategySettingsModal({
   const [enableShort, setEnableShort] = useState(true);
   const [shortLots, setShortLots] = useState('2');
   const [maxShortTrades, setMaxShortTrades] = useState('0');
+  const [shortStartTime, setShortStartTime] = useState('14:00');
+  const [ignoreLogicShort, setIgnoreLogicShort] = useState(false);
   const [restrictShortScope, setRestrictShortScope] = useState(true);
   const [shortScope, setShortScope] = useState({
     s1: false, s2: true, s3: true, s4: true, s5: false
@@ -278,6 +280,7 @@ export default function StrategySettingsModal({
   const [maxLongTrades, setMaxLongTrades] = useState('1');
   const [longStartTime, setLongStartTime] = useState('09:30');
   const [strictEntry, setStrictEntry] = useState(true);
+  const [longAdx, setLongAdx] = useState('20');
   const [longTimeExit, setLongTimeExit] = useState(true);
   const [longExitTime, setLongExitTime] = useState({ h: '15', m: '10' });
   const [restrictLongScope, setRestrictLongScope] = useState(true);
@@ -293,6 +296,10 @@ export default function StrategySettingsModal({
   // Visuals
   const [mainTable, setMainTable] = useState('Hide');
   const [pnlTable, setPnlTable] = useState('Bottom m');
+  const [showRegime, setShowRegime] = useState(true);
+  const [showIndReg, setShowIndReg] = useState(true);
+  const [showTMode, setShowTMode] = useState(true);
+  const [showTType, setShowTType] = useState(true);
   const [showSuperTrend, setShowSuperTrend] = useState(false);
   const [superTrendFactor, setSuperTrendFactor] = useState('3');
   const [superTrendPeriod, setSuperTrendPeriod] = useState('10');
@@ -302,6 +309,15 @@ export default function StrategySettingsModal({
   const [vwmaLength, setVwmaLength] = useState('35');
   const [showMomLabels, setShowMomLabels] = useState(false);
   const [showDirLabels, setShowDirLabels] = useState(false);
+
+  // Strategy Lag
+  const [strategyLagValue, setStrategyLagValue] = useState('0');
+  const [lagMode, setLagMode] = useState('Auto');
+
+  // Capital
+  const [initialCapital, setInitialCapital] = useState('100000');
+  const [maxCapitalPerTrade, setMaxCapitalPerTrade] = useState('10000');
+  const [riskPercentage, setRiskPercentage] = useState('2');
 
   /* ================= WINDOW STATE ================= */
   const [pos, setPos] = useState({ x: 0, y: 0 });
@@ -795,6 +811,25 @@ export default function StrategySettingsModal({
                     />
                   </div>
 
+                  {/* Start Time Box & Ignore Logic */}
+                  <div className="flex items-center gap-3">
+                    <label className="text-[#d1d4dc] min-w-[100px]">Short Start Time</label>
+                    <input 
+                      type="text" 
+                      value={shortStartTime}
+                      onChange={(e) => setShortStartTime(e.target.value)}
+                      className="bg-[#2a2e39] border border-[#3a3e49] rounded px-3 py-1 text-[#d1d4dc] w-20"
+                      placeholder="HH:MM"
+                    />
+                    <input 
+                      type="checkbox" 
+                      checked={ignoreLogicShort}
+                      onChange={(e) => setIgnoreLogicShort(e.target.checked)}
+                      className="w-4 h-4 ml-4"
+                    />
+                    <label className="text-[#d1d4dc]">Ignore logic - Consider start time</label>
+                  </div>
+
                   {/* Restrict Scope */}
                   <div className="flex items-center gap-3">
                     <input 
@@ -962,6 +997,17 @@ export default function StrategySettingsModal({
                     <label className="text-[#d1d4dc]">Strict Entry</label>
                   </div>
 
+                  {/* ADX */}
+                  <div className="flex items-center gap-3">
+                    <label className="text-[#d1d4dc] min-w-[100px]">ADX</label>
+                    <input 
+                      type="text" 
+                      value={longAdx}
+                      onChange={(e) => setLongAdx(e.target.value)}
+                      className="bg-[#2a2e39] border border-[#3a3e49] rounded px-3 py-1 text-[#d1d4dc] w-16"
+                    />
+                  </div>
+
                   {/* Time Exit */}
                   <div className="flex items-center gap-3">
                     <input 
@@ -1084,6 +1130,49 @@ export default function StrategySettingsModal({
                     </select>
                   </div>
 
+                  {/* Regime & Indicators Checkboxes */}
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={showRegime}
+                        onChange={(e) => setShowRegime(e.target.checked)}
+                        className="w-4 h-4"
+                      />
+                      <label className="text-[#d1d4dc]">Regime</label>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={showIndReg}
+                        onChange={(e) => setShowIndReg(e.target.checked)}
+                        className="w-4 h-4"
+                      />
+                      <label className="text-[#d1d4dc]">Ind Reg</label>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={showTMode}
+                        onChange={(e) => setShowTMode(e.target.checked)}
+                        className="w-4 h-4"
+                      />
+                      <label className="text-[#d1d4dc]">T mode</label>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="checkbox" 
+                        checked={showTType}
+                        onChange={(e) => setShowTType(e.target.checked)}
+                        className="w-4 h-4"
+                      />
+                      <label className="text-[#d1d4dc]">T type</label>
+                    </div>
+                  </div>
+
                   {/* SuperTrend */}
                   <div className="flex items-center gap-3">
                     <input 
@@ -1170,6 +1259,76 @@ export default function StrategySettingsModal({
                       />
                       <label className="text-[#d1d4dc]">Show Dir. Labels</label>
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ========== 7. STRATEGY LAG ========== */}
+              <div>
+                <div className="text-xs text-[#787b86] font-semibold uppercase mb-4">
+                  ========== 7. STRATEGY LAG ==========
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <label className="text-[#d1d4dc] min-w-[100px]">Lag Value</label>
+                    <input 
+                      type="text" 
+                      value={strategyLagValue}
+                      onChange={(e) => setStrategyLagValue(e.target.value)}
+                      className="bg-[#2a2e39] border border-[#3a3e49] rounded px-3 py-1 text-[#d1d4dc] w-20"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="text-[#d1d4dc] min-w-[100px]">Lag Mode</label>
+                    <select 
+                      value={lagMode} 
+                      onChange={(e) => setLagMode(e.target.value)}
+                      className="bg-[#2a2e39] border border-[#3a3e49] rounded px-3 py-1 text-[#d1d4dc]"
+                    >
+                      <option>Auto</option>
+                      <option>Manual</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* ========== 8. CAPITAL ========== */}
+              <div>
+                <div className="text-xs text-[#787b86] font-semibold uppercase mb-4">
+                  ========== 8. CAPITAL ==========
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <label className="text-[#d1d4dc] min-w-[150px]">Initial Capital (₹)</label>
+                    <input 
+                      type="text" 
+                      value={initialCapital}
+                      onChange={(e) => setInitialCapital(e.target.value)}
+                      className="bg-[#2a2e39] border border-[#3a3e49] rounded px-3 py-1 text-[#d1d4dc] w-32"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="text-[#d1d4dc] min-w-[150px]">Max Capital Per Trade (₹)</label>
+                    <input 
+                      type="text" 
+                      value={maxCapitalPerTrade}
+                      onChange={(e) => setMaxCapitalPerTrade(e.target.value)}
+                      className="bg-[#2a2e39] border border-[#3a3e49] rounded px-3 py-1 text-[#d1d4dc] w-32"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="text-[#d1d4dc] min-w-[150px]">Risk per Trade (%)</label>
+                    <input 
+                      type="text" 
+                      value={riskPercentage}
+                      onChange={(e) => setRiskPercentage(e.target.value)}
+                      className="bg-[#2a2e39] border border-[#3a3e49] rounded px-3 py-1 text-[#d1d4dc] w-20"
+                    />
                   </div>
                 </div>
               </div>

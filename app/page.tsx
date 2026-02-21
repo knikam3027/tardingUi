@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import MainLayout from "@/components/layout/MainLayout";
 import StrikePricesTable from "@/components/StrikePricesTable";
+import OngoingTradesTable from "@/components/OngoingTradesTable";
 import AccountSummary from "@/components/AccountSummary";
 import MobileTradingDashboard from "@/components/MobileTradingDashboard";
 import TradingHistory from "@/components/TradingHistory";
@@ -24,6 +25,7 @@ export default function Home() {
   });
   const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [killSwitchActive, setKillSwitchActive] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -64,7 +66,20 @@ export default function Home() {
   };
 
   const handleQTPAction = (action: 'LE' | 'LX' | 'SE' | 'SX') => {
-    console.log(`QTP ${action} for ${qtpIndex} with selected strikes`);
+    const actionNames: {[key: string]: string} = {
+      'LE': 'Long Entry',
+      'LX': 'Long Exit',
+      'SE': 'Short Entry',
+      'SX': 'Short Exit'
+    };
+    
+    const selectedStrikes = Object.entries(qtpStrikes)
+      .filter(([_, selected]) => selected)
+      .map(([strike, _]) => strike);
+    
+    const message = `${actionNames[action]} initiated for ${qtpIndex}\nStrike(s): ${selectedStrikes.join(', ')}\nDays: ${qtpDays}`;
+    console.log(message);
+    alert(`✅ ${message}`);
     setShowQTPPopup(false);
   };
 
@@ -173,44 +188,49 @@ export default function Home() {
         <div className="hidden lg:block">
           {activeView === 'tables' ? (
             <>
-              <div 
-                ref={containerRef}
-                className="flex gap-1 transition-all duration-300 relative"
-              >
+              {/* Trading Tables Section */}
+              <div className="space-y-4">
+                {/* Strike Prices Table and Account Summary */}
                 <div 
-                  className="transition-all duration-300 overflow-hidden"
-                  style={{ 
-                    width: `${leftWidth}%`,
-                    height: `${tableHeight}px`
-                  }}
+                  ref={containerRef}
+                  className="flex gap-1 transition-all duration-300 relative"
                 >
-                  <StrikePricesTable className="h-full" />
+                  <div 
+                    className="transition-all duration-300 overflow-hidden"
+                    style={{ 
+                      width: `${leftWidth}%`,
+                      height: `${tableHeight}px`
+                    }}
+                  >
+                    <StrikePricesTable className="h-full" />
+                  </div>
+                  
+                  {/* Resizer Handle */}
+                  {isResizable && (
+                    <div
+                      onMouseDown={handleMouseDown}
+                      className={`w-1 bg-gray-600 hover:bg-blue-500 cursor-col-resize transition-colors z-10 ${
+                        isDragging ? 'bg-blue-500' : ''
+                      }`}
+                      title="Drag to resize"
+                    />
+                  )}
+                  
+                  <div 
+                    className="transition-all duration-300 overflow-hidden"
+                    style={{ 
+                      width: `${100 - leftWidth}%`,
+                      height: `${tableHeight}px`
+                    }}
+                  >
+                    <AccountSummary className="h-full" />
+                  </div>
                 </div>
-                
-                {/* Resizer Handle */}
-                {isResizable && (
-                  <div
-                    onMouseDown={handleMouseDown}
-                    className={`w-1 bg-gray-600 hover:bg-blue-500 cursor-col-resize transition-colors z-10 ${
-                      isDragging ? 'bg-blue-500' : ''
-                    }`}
-                    title="Drag to resize"
-                  />
-                )}
-                
-                <div 
-                  className="transition-all duration-300 overflow-hidden"
-                  style={{ 
-                    width: `${100 - leftWidth}%`,
-                    height: `${tableHeight}px`
-                  }}
-                >
-                  <AccountSummary className="h-full" />
-                </div>
-              </div>
 
-              {/* Trading History Section */}
-              <div className="mt-4">
+                {/* Ongoing Trades Table */}
+                <OngoingTradesTable />
+
+                {/* Trading History Section */}
                 <TradingHistory />
               </div>
             </>
@@ -303,114 +323,125 @@ export default function Home() {
 
         {/* QTP Popup */}
         {showQTPPopup && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 w-96 max-h-[80vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-white font-bold text-lg">Quick Trade Panel</h3>
+                <h3 className="text-white font-bold text-lg">🎯 Quick Trade Panel (QTP)</h3>
                 <button 
                   onClick={() => setShowQTPPopup(false)}
-                  className="text-gray-400 hover:text-white text-xl"
+                  className="text-gray-400 hover:text-white text-2xl font-bold"
                 >
                   ✕
                 </button>
               </div>
               
-              <div className="space-y-4">
-                {/* Index Selection */}
-                <div>
-                  <label className="block text-sm text-gray-300 mb-2">Select Index</label>
-                  <select 
-                    value={qtpIndex} 
-                    onChange={(e) => setQTPIndex(e.target.value)}
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white"
-                  >
-                    <option value="NIFTY">NIFTY</option>
-                    <option value="BANKNIFTY">BANKNIFTY</option>
-                    <option value="FINNIFTY">FINNIFTY</option>
-                  </select>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left Column: Strategy Configuration */}
+                <div className="space-y-4">
+                  {/* Action Buttons - LE/LX/SE/SX */}
+                  <div>
+                    <label className="block text-sm text-gray-300 mb-2 font-bold">Select Entry/Exit Action</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => handleQTPAction('LE')}
+                        className="bg-green-600 hover:bg-green-700 text-white py-3 rounded font-bold text-sm transition-colors"
+                      >
+                        🟢 LE (Long Entry)
+                      </button>
+                      <button
+                        onClick={() => handleQTPAction('LX')}
+                        className="bg-red-600 hover:bg-red-700 text-white py-3 rounded font-bold text-sm transition-colors"
+                      >
+                        🔴 LX (Long Exit)
+                      </button>
+                      <button
+                        onClick={() => handleQTPAction('SE')}
+                        className="bg-orange-600 hover:bg-orange-700 text-white py-3 rounded font-bold text-sm transition-colors"
+                      >
+                        🟠 SE (Short Entry)
+                      </button>
+                      <button
+                        onClick={() => handleQTPAction('SX')}
+                        className="bg-purple-600 hover:bg-purple-700 text-white py-3 rounded font-bold text-sm transition-colors"
+                      >
+                        🟣 SX (Short Exit)
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Index Selection */}
+                  <div>
+                    <label className="block text-sm text-gray-300 mb-2 font-bold">Select Index</label>
+                    <select 
+                      value={qtpIndex} 
+                      onChange={(e) => setQTPIndex(e.target.value)}
+                      className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-400"
+                    >
+                      <option value="NIFTY">NIFTY</option>
+                      <option value="BANKNIFTY">BANKNIFTY</option>
+                      <option value="FINNIFTY">FINNIFTY</option>
+                    </select>
+                  </div>
+
+                  {/* Days Selection */}
+                  <div>
+                    <label className="block text-sm text-gray-300 mb-2 font-bold">Days to Run Strategy</label>
+                    <input
+                      type="number"
+                      value={qtpDays}
+                      onChange={(e) => setQTPDays(e.target.value)}
+                      className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-400"
+                      min="1"
+                      max="30"
+                      placeholder="Enter number of days"
+                    />
+                  </div>
                 </div>
 
-                {/* Strike Prices Selection */}
+                {/* Right Column: Strike Selection */}
                 <div>
-                  <label className="block text-sm text-gray-300 mb-2">Select Strike Prices</label>
-                  <div className="grid grid-cols-5 gap-2">
+                  <label className="block text-sm text-gray-300 mb-2 font-bold">Select Strike Prices (S1 to S5)</label>
+                  <div className="grid grid-cols-5 gap-2 bg-gray-700 p-3 rounded max-h-48 overflow-y-auto">
                     {Object.entries(qtpStrikes).map(([key, value]) => (
-                      <label key={key} className="flex items-center space-x-1">
+                      <label 
+                        key={key} 
+                        className="flex items-center space-x-1 bg-gray-600 p-2 rounded hover:bg-gray-500 cursor-pointer transition-colors"
+                      >
                         <input 
                           type="checkbox" 
                           checked={value}
                           onChange={(e) => setQTPStrikes(prev => ({ ...prev, [key]: e.target.checked }))}
                           className="w-4 h-4 text-blue-600 rounded" 
                         />
-                        <span className="text-sm text-gray-300">{key}</span>
+                        <span className="text-sm text-gray-200 font-semibold">{key}</span>
                       </label>
                     ))}
                   </div>
-                </div>
-
-                {/* Days Selection */}
-                <div>
-                  <label className="block text-sm text-gray-300 mb-2">Days to Run Strategy</label>
-                  <input
-                    type="text"
-                    value={qtpDays}
-                    onChange={(e) => setQTPDays(e.target.value)}
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white"
-                    placeholder="Enter number of days"
-                  />
-                </div>
-
-                {/* Action Buttons */}
-                <div>
-                  <label className="block text-sm text-gray-300 mb-2">Select Action</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => handleQTPAction('LE')}
-                      className="bg-green-600 hover:bg-green-700 text-white py-2 rounded font-bold"
-                    >
-                      LE (Long Entry)
-                    </button>
-                    <button
-                      onClick={() => handleQTPAction('LX')}
-                      className="bg-red-600 hover:bg-red-700 text-white py-2 rounded font-bold"
-                    >
-                      LX (Long Exit)
-                    </button>
-                    <button
-                      onClick={() => handleQTPAction('SE')}
-                      className="bg-orange-600 hover:bg-orange-700 text-white py-2 rounded font-bold"
-                    >
-                      SE (Short Entry)
-                    </button>
-                    <button
-                      onClick={() => handleQTPAction('SX')}
-                      className="bg-purple-600 hover:bg-purple-700 text-white py-2 rounded font-bold"
-                    >
-                      SX (Short Exit)
-                    </button>
+                  <div className="text-xs text-gray-400 mt-2">
+                    Selected: {Object.values(qtpStrikes).filter(v => v).length} / {Object.keys(qtpStrikes).length}
                   </div>
                 </div>
+              </div>
 
-                {/* Back Test Results Placeholder */}
-                <div className="border-t border-gray-600 pt-4">
-                  <h4 className="text-sm text-gray-300 mb-2">Back Test Results</h4>
-                  <div className="bg-gray-700 rounded p-3 text-sm text-gray-300">
-                    <div className="flex justify-between">
-                      <span>Total Trades:</span>
-                      <span className="text-white">24</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Win Rate:</span>
-                      <span className="text-green-400">68%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Total P&L:</span>
-                      <span className="text-green-400">₹45,230</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Max Drawdown:</span>
-                      <span className="text-red-400">₹8,450</span>
-                    </div>
+              {/* Back Test Results */}
+              <div className="border-t border-gray-600 mt-6 pt-4">
+                <h4 className="text-sm text-gray-300 mb-3 font-bold">📊 Back Test Results</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="bg-gray-700 rounded p-3 text-center">
+                    <div className="text-xs text-gray-400">Total Trades</div>
+                    <div className="text-lg font-bold text-white">24</div>
+                  </div>
+                  <div className="bg-gray-700 rounded p-3 text-center">
+                    <div className="text-xs text-gray-400">Win Rate</div>
+                    <div className="text-lg font-bold text-green-400">68%</div>
+                  </div>
+                  <div className="bg-gray-700 rounded p-3 text-center">
+                    <div className="text-xs text-gray-400">Total P&L</div>
+                    <div className="text-lg font-bold text-green-400">₹45,230</div>
+                  </div>
+                  <div className="bg-gray-700 rounded p-3 text-center">
+                    <div className="text-xs text-gray-400">Max Drawdown</div>
+                    <div className="text-lg font-bold text-red-400">₹8,450</div>
                   </div>
                 </div>
               </div>

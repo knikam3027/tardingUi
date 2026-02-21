@@ -44,6 +44,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileMenuOpen, onSettingsClick, on
   const [killSwitchActive, setKillSwitchActive] = useState(false);
   const [showKillSwitchConfirm, setShowKillSwitchConfirm] = useState(false);
 
+  // Multiple accounts state
+  const [selectedAccount, setSelectedAccount] = useState('TD2024001');
+  const [showAccountSwitcher, setShowAccountSwitcher] = useState(false);
+  const accounts = [
+    { id: 'TD2024001', name: 'Main Account', status: 'ACTIVE' },
+    { id: 'TD2024002', name: 'Secondary Account', status: 'ACTIVE' },
+    { id: 'TD2024003', name: 'Demo Account', status: 'DEMO' }
+  ];
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -158,16 +167,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileMenuOpen, onSettingsClick, on
             <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
               <User className="w-5 h-5 text-white" />
             </div>
-            <div>
+            <div className="flex-1">
               <div className="font-medium text-gray-900">Yuvraj</div>
               <div className="text-sm text-gray-500">Premium User</div>
             </div>
+            <button
+              onClick={() => setShowAccountSwitcher(!showAccountSwitcher)}
+              className="text-gray-600 hover:text-blue-600 font-bold text-lg"
+              title="Switch Account"
+            >
+              ↔️
+            </button>
           </div>
           
           <div className="space-y-2 text-xs">
             <div className="flex justify-between">
               <span className="text-gray-600">Account ID:</span>
-              <span className="font-mono text-gray-900">#TD2024001</span>
+              <span className="font-mono text-gray-900">{selectedAccount}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Status:</span>
@@ -180,6 +196,40 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileMenuOpen, onSettingsClick, on
               <span className="text-gray-900">Today 9:15 AM</span>
             </div>
           </div>
+
+          {/* Account Switcher Dropdown */}
+          {showAccountSwitcher && (
+            <div className="mt-3 p-2 bg-white border border-gray-300 rounded-lg space-y-1">
+              {accounts.map((account) => (
+                <button
+                  key={account.id}
+                  onClick={() => {
+                    setSelectedAccount(account.id);
+                    setShowAccountSwitcher(false);
+                  }}
+                  className={`w-full text-left px-2 py-1.5 rounded text-xs transition-colors ${
+                    selectedAccount === account.id
+                      ? 'bg-blue-100 text-blue-700 font-semibold'
+                      : 'hover:bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>{account.name}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-200">
+                      {account.status}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-gray-500">{account.id}</div>
+                </button>
+              ))}
+              <button
+                onClick={() => alert('Add new account coming soon!')}
+                className="w-full text-left px-2 py-2 text-xs text-blue-600 hover:bg-blue-50 rounded font-semibold"
+              >
+                + Add New Account
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Kill Switch */}
