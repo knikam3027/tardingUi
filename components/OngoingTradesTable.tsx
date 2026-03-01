@@ -5,7 +5,6 @@ import React, { useState, useEffect } from 'react';
 const OngoingTradesTable = ({ className = "" }: { className?: string }) => {
   const [mounted, setMounted] = useState(false);
   const [engineRunning, setEngineRunning] = useState(true);
-  const [holdPosition, setHoldPosition] = useState(false);
   const [ongoingTrades, setOngoingTrades] = useState([
     {
       id: 1,
@@ -115,18 +114,6 @@ const OngoingTradesTable = ({ className = "" }: { className?: string }) => {
         {/* Control Buttons */}
         <div className="flex items-center gap-3 flex-wrap">
           <button
-            onClick={handleStartStop}
-            className={`px-3 py-1.5 text-sm font-bold rounded transition-colors flex items-center gap-1 ${
-              engineRunning
-                ? 'bg-red-600 hover:bg-red-700 text-white'
-                : 'bg-green-600 hover:bg-green-700 text-white'
-            }`}
-          >
-            <span className={`w-2 h-2 rounded-full ${engineRunning ? 'bg-white animate-pulse' : 'bg-white'}`}></span>
-            {engineRunning ? '⏹ Stop Engine' : '▶ Start Engine'}
-          </button>
-
-          <button
             onClick={handleSquareOffAll}
             disabled={ongoingTrades.length === 0 || !engineRunning}
             className={`px-3 py-1.5 text-sm font-bold rounded transition-colors flex items-center gap-1 ${
@@ -138,16 +125,6 @@ const OngoingTradesTable = ({ className = "" }: { className?: string }) => {
             <span>🔲</span>
             Square Off All
           </button>
-
-          <label className="flex items-center gap-2 px-3 py-1.5 bg-purple-900 text-white rounded cursor-pointer hover:bg-purple-800 transition-colors">
-            <input
-              type="checkbox"
-              checked={holdPosition}
-              onChange={(e) => setHoldPosition(e.target.checked)}
-              className="w-4 h-4 rounded"
-            />
-            <span className="text-sm font-bold">Hold (3 Candles)</span>
-          </label>
 
           <div className="flex-1"></div>
 

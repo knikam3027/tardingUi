@@ -15,7 +15,6 @@ export default function Home() {
   const [isDragging, setIsDragging] = useState(false);
   const [activeView, setActiveView] = useState<'tables' | 'chart'>('tables');
   const [engineRunning, setEngineRunning] = useState(false);
-  const [holdMode, setHoldMode] = useState(false);
   const [showQTPPopup, setShowQTPPopup] = useState(false);
   const [qtpIndex, setQTPIndex] = useState('NIFTY');
   
@@ -236,17 +235,6 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Engine Control */}
-          <button 
-            onClick={handleEngineToggle}
-            className={`px-4 py-2 rounded text-sm transition-colors flex items-center gap-2 ${
-              engineRunning 
-                ? 'bg-red-600 hover:bg-red-700 text-white' 
-                : 'bg-green-600 hover:bg-green-700 text-white'
-            }`}
-          >
-            {engineRunning ? '⏹️ Stop Engine' : '▶️ Start Engine'}
-          </button>
 
           {/* Square Off All */}
           <button 
@@ -255,17 +243,6 @@ export default function Home() {
           >
             ⚡ Square Off All
           </button>
-
-          {/* Hold Checkbox */}
-          <label className="flex items-center space-x-2 px-4 py-2 bg-gray-700 rounded text-sm">
-            <input 
-              type="checkbox" 
-              checked={holdMode}
-              onChange={(e) => setHoldMode(e.target.checked)}
-              className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" 
-            />
-            <span className="text-white">Hold (3 candles)</span>
-          </label>
 
           {/* T.MTM Trailing for all indices */}
           <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-700 rounded text-sm">
@@ -314,14 +291,17 @@ export default function Home() {
             <>
               {/* Trading Tables Section */}
               <div>
-                {/* Strike Prices Table */}
-                <div ref={containerRef}>
-                  <StrikePricesTable />
-                </div>
+                {/* Strike Prices Table and Account Summary - Side by Side */}
+                <div className="flex gap-2 mb-2">
+                  {/* Strike Prices Table - Left (60%) */}
+                  <div ref={containerRef} className="w-[60%]">
+                    <StrikePricesTable />
+                  </div>
 
-                {/* Account Summary */}
-                <div>
-                  <AccountSummary />
+                  {/* Account Summary - Right (40%) */}
+                  <div className="w-[40%]">
+                    <AccountSummary />
+                  </div>
                 </div>
 
                 {/* Ongoing Trades Table */}

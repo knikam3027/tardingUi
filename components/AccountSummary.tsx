@@ -336,11 +336,11 @@ const AccountSummary = ({ className = "" }: { className?: string }) => {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-[11px] lg:text-xs border-collapse min-w-[750px]">
+        <table className="w-full text-[10px] border-collapse">
           <thead className="bg-[#1f2937]">
             <tr>
               {["STRIKE", "ENTRY", "EXIT", "LOTS", "PRICE", "PTS", "P&L", "SL/TRGT", "TRIG", "S", "B"].map(h => (
-                <th key={h} className="px-2 py-2 text-left font-bold text-gray-300 border-r border-gray-700 whitespace-nowrap">
+                <th key={h} className="px-1 py-1 text-left font-bold text-gray-300 border-r border-gray-700 whitespace-nowrap">
                   {h}
                 </th>
               ))}
@@ -350,26 +350,26 @@ const AccountSummary = ({ className = "" }: { className?: string }) => {
           <tbody>
             {tradeData.map((trade, i) => (
               <tr key={i} className={`${i === 0 ? 'bg-[#020617]' : 'border-t border-gray-800'} hover:bg-gray-800/30 transition-colors`}>
-                <td className="px-2 py-1 font-bold text-yellow-400">{trade.strike}</td>
-                <td className="px-2 py-1 text-gray-300">{trade.entry}</td>
-                <td className="px-2 py-1 text-gray-300">{trade.exit}</td>
-                <td className="px-2 py-1 text-gray-300">{trade.lots}</td>
-                <td className="px-2 py-1 font-semibold text-white">{trade.price}</td>
-                <td className={`px-2 py-1 font-semibold ${trade.pts.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
+                <td className="px-1 py-1 font-bold text-yellow-400">{trade.strike}</td>
+                <td className="px-1 py-1 text-gray-300">{trade.entry}</td>
+                <td className="px-1 py-1 text-gray-300">{trade.exit}</td>
+                <td className="px-1 py-1 text-gray-300">{trade.lots}</td>
+                <td className="px-1 py-1 font-semibold text-white">{trade.price}</td>
+                <td className={`px-1 py-1 font-semibold ${trade.pts.startsWith('+') ? 'text-green-400' : 'text-red-400'}`}>
                   {trade.pts}
                 </td>
-                <td className={`px-2 py-1 font-bold ${trade.isPositive ? 'text-green-400' : 'text-red-400'}`}>
+                <td className={`px-1 py-1 font-bold ${trade.isPositive ? 'text-green-400' : 'text-red-400'}`}>
                   {trade.pnl}
                 </td>
-                <td className="px-2 py-1 text-gray-300 font-mono text-[10px]">
+                <td className="px-1 py-1 text-gray-300 font-mono text-[9px]">
                   <input
                     type="text"
                     value={trade.slTrgt}
-                    className="w-16 bg-gray-600 border border-gray-500 rounded px-1 py-0.5 text-gray-100 text-[10px]"
+                    className="w-14 bg-gray-600 border border-gray-500 rounded px-1 py-0.5 text-gray-100 text-[9px]"
                     readOnly
                   />
                 </td>
-                <td className="px-2 py-1 relative">
+                <td className="px-1 py-1 relative">
                   <div className={`font-bold text-black text-center rounded-sm cursor-pointer ${
                     trade.trigger === 'OLD' ? 'bg-yellow-500' : 'bg-blue-500 text-white'
                   }`}>
@@ -382,8 +382,8 @@ const AccountSummary = ({ className = "" }: { className?: string }) => {
                     </button>
                   </div>
                 </td>
-                <td className="px-2 py-1 text-center text-gray-300">{trade.s}</td>
-                <td className="px-2 py-1 text-center text-gray-300">{trade.b}</td>
+                <td className="px-1 py-1 text-center text-gray-300">{trade.s}</td>
+                <td className="px-1 py-1 text-center text-gray-300">{trade.b}</td>
               </tr>
             ))}
           </tbody>

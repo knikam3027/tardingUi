@@ -411,11 +411,11 @@ const StrikePricesTable = ({ className = "" }: { className?: string }) => {
   return (
     <div className={`border border-gray-700 bg-[#020617] rounded-md overflow-hidden ${className}`}>
       <div className="overflow-x-auto">
-        <table className="w-full text-[11px] border-collapse min-w-[1200px]">
+        <table className="w-full text-[10px] border-collapse">
           <thead className="bg-[#1d4ed8]">
             <tr>
-              {["STRIKE", "OPEN", "LTP", "CHANGE", "LEAD", "REGIME", "IND.REG", "T.MODE", "T.TYPE", "C.VOLUME", "C.DELTA", "C.IV", "CE", "PE", "MANUAL"].map(h => (
-                <th key={h} className="px-2 py-1 text-left font-bold text-white border-r border-blue-900 whitespace-nowrap">
+              {["STRIKE", "C.IV", "OPEN", "LTP", "CE", "PE", "CHANGE", "LEAD", "C.DELTA", "C.VOLUME", "REGIME", "IND.REG", "T.MODE", "T.TYPE", "MANUAL"].map(h => (
+                <th key={h} className="px-1 py-1 text-left font-bold text-white border-r border-blue-900 whitespace-nowrap">
                   {h}
                 </th>
               ))}
@@ -423,36 +423,38 @@ const StrikePricesTable = ({ className = "" }: { className?: string }) => {
           </thead>
 
           <tbody>
-            {strikeData.map((row, i) => (
-              <tr key={i} className="border-t border-gray-800 hover:bg-gray-800/50 transition-colors">
-                <td className="px-2 py-1 text-gray-400 font-mono">{row.strike}</td>
-                <td className="px-2 py-1 text-gray-400">{row.open}</td>
-                <td className="px-2 py-1 font-bold text-white">{row.ltp}</td>
-                <td className={`px-2 py-1 font-bold ${row.change.startsWith("+") ? "text-green-400" : "text-red-400"}`}>
+            {strikeData.map((row, i) => {
+              const isATM = row.strike === '25850';
+              return (
+              <tr key={i} className={`border-t border-gray-800 transition-colors ${isATM ? 'bg-yellow-900/40 border-yellow-600' : 'hover:bg-gray-800/50'}`}>
+                <td className={`px-1 py-1 font-mono ${isATM ? 'text-yellow-300 font-bold' : 'text-gray-400'}`}>{row.strike}</td>
+                <td className="px-1 py-1 text-purple-400 font-semibold">{row.cIV}</td>
+                <td className="px-1 py-1 text-gray-400">{row.open}</td>
+                <td className="px-1 py-1 font-bold text-white">{row.ltp}</td>
+                <td className="px-1 py-1 text-blue-300 font-semibold">{row.ce}</td>
+                <td className="px-1 py-1 text-red-300 font-semibold">{row.pe}</td>
+                <td className={`px-1 py-1 font-bold ${row.change.startsWith("+") ? "text-green-400" : "text-red-400"}`}>
                   {row.change}
                 </td>
-                <td className="px-2 py-1 text-orange-400">
+                <td className="px-1 py-1 text-orange-400">
                   {row.lead} 
                   <span className="ml-1">
                     {row.lead.includes('▲') ? '▲' : row.lead.includes('▼') ? '▼' : '➡️'}
                   </span>
                 </td>
-                <td className="px-2 py-1 bg-red-700 text-white font-bold text-[10px] text-center rounded">
-                  {row.regime}
-                </td>
-                <td className="px-2 py-1 text-green-400 font-semibold">{row.indReg}</td>
-                <td className="px-2 py-1 text-blue-400 font-semibold">{row.tMode}</td>
-                <td className="px-2 py-1 text-green-400 font-semibold">{row.tType}</td>
-                <td className="px-2 py-1 text-yellow-400 font-semibold">{row.cVolume}</td>
-                <td className={`px-2 py-1 font-semibold ${parseFloat(row.cDelta) >= 0 ? "text-green-400" : "text-red-400"}`}>
+                <td className={`px-1 py-1 font-semibold ${parseFloat(row.cDelta) >= 0 ? "text-green-400" : "text-red-400"}`}>
                   {row.cDelta}
                 </td>
-                <td className="px-2 py-1 text-purple-400 font-semibold">{row.cIV}</td>
-                <td className="px-2 py-1 text-blue-300 font-semibold">{row.ce}</td>
-                <td className="px-2 py-1 text-red-300 font-semibold">{row.pe}</td>
+                <td className="px-1 py-1 text-yellow-400 font-semibold">{row.cVolume}</td>
+                <td className={`px-1 py-1 font-bold text-center ${row.regime === 'BEARISH' ? 'text-red-400' : row.regime === 'SHORT COV' ? 'text-orange-400' : 'text-green-400'}`}>
+                  {row.regime}
+                </td>
+                <td className="px-1 py-1 text-green-400 font-semibold">{row.indReg}</td>
+                <td className="px-1 py-1 text-blue-400 font-semibold">{row.tMode}</td>
+                <td className="px-1 py-1 text-green-400 font-semibold">{row.tType}</td>
 
                 {/* MANUAL Column */}
-                <td className="px-2 py-1">
+                <td className="px-1 py-1">
                   <button
                     onClick={() => {
                       setManualPopupData({
@@ -469,7 +471,8 @@ const StrikePricesTable = ({ className = "" }: { className?: string }) => {
                   </button>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
 
