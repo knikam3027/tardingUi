@@ -123,7 +123,7 @@ export default function Home() {
   return (
     <MainLayout>
       <div 
-        className="bg-[#0b1220] min-h-screen text-white p-2 md:p-4 select-none"
+        className="bg-[#0b1220] min-h-screen text-white p-1 select-none"
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}

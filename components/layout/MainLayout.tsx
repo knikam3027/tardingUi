@@ -67,7 +67,7 @@ const MainLayout: React.FC<Props> = ({ children }) => {
         
         {/* Main Content */}
         <main className="flex-1 pt-14 lg:pl-56 min-h-screen bg-zinc-50 transition-all duration-300">
-          <div className="max-w-7xl mx-auto p-4 md:p-6">
+          <div className="w-full px-1">
             {children}
           </div>
         </main>
