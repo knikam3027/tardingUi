@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 // Manual Trade Popup Component
 interface ManualTradePopupProps {
@@ -22,6 +22,17 @@ const ManualTradePopup: React.FC<ManualTradePopupProps> = ({
 }) => {
   const [selectedTypes, setSelectedTypes] = useState({ call: true, put: false });
   const [quantity, setQuantity] = useState('1');
+  const [price, setPrice] = useState('');
+  const [marketPrice, setMarketPrice] = useState(true);
+  const [marketProtection, setMarketProtection] = useState(false);
+  const [triggerEnabled, setTriggerEnabled] = useState(false);
+  const [triggerPrice, setTriggerPrice] = useState('');
+  
+  // Draggable state
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const popupRef = useRef<HTMLDivElement>(null);
 
   const handleTypeToggle = (type: 'call' | 'put') => {
     setSelectedTypes(prev => ({ ...prev, [type]: !prev[type] }));
@@ -42,15 +53,83 @@ const ManualTradePopup: React.FC<ManualTradePopupProps> = ({
     onClose();
   };
 
+  // Draggable handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (popupRef.current) {
+      const rect = popupRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+      setIsDragging(true);
+    }
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        setPosition({
+          x: e.clientX - dragOffset.x,
+          y: e.clientY - dragOffset.y
+        });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragOffset]);
+
+  // Reset position when popup opens
+  useEffect(() => {
+    if (isOpen) {
+      setPosition({ x: window.innerWidth / 2 - 180, y: window.innerHeight / 2 - 200 });
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-[#1a365d] border border-gray-600 rounded-lg shadow-xl w-72 text-white">
-        {/* Header with CALL/PUT checkboxes */}
-        <div className="flex justify-between items-center px-3 py-2 border-b border-gray-600">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50" onClick={(e) => e.stopPropagation()}>
+      <div 
+        ref={popupRef}
+        className="bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-80 text-white absolute"
+        style={{ 
+          left: position.x, 
+          top: position.y,
+          cursor: isDragging ? 'grabbing' : 'default'
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header - Draggable */}
+        <div 
+          className="flex justify-between items-center px-4 py-3 border-b border-gray-600 cursor-grab active:cursor-grabbing bg-gray-700 rounded-t-lg"
+          onMouseDown={handleMouseDown}
+        >
+          <h3 className="text-white font-bold text-sm">🎯 Manual Trade - {strike}</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white text-xl font-bold px-2 py-1 hover:bg-gray-600 rounded"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-4 space-y-3">
+          {/* CALL/PUT Selection */}
           <div className="flex items-center gap-4">
-            <label className="flex items-center gap-1 cursor-pointer">
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={selectedTypes.call}
@@ -59,7 +138,7 @@ const ManualTradePopup: React.FC<ManualTradePopupProps> = ({
               />
               <span className="text-sm font-semibold text-blue-300">CALL</span>
             </label>
-            <label className="flex items-center gap-1 cursor-pointer">
+            <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={selectedTypes.put}
@@ -69,68 +148,114 @@ const ManualTradePopup: React.FC<ManualTradePopupProps> = ({
               <span className="text-sm font-semibold text-red-300">PUT</span>
             </label>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white text-lg font-bold leading-none"
-          >
-            ×
-          </button>
-        </div>
 
-        {/* Action Buttons Grid */}
-        <div className="p-3 space-y-2">
+          {/* Action Buttons Grid */}
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => executeAction('LE')}
               className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded transition-colors"
             >
-              LE
+              🟢 LE (Long Entry)
             </button>
             <button
               onClick={() => executeAction('LX')}
               className="px-3 py-2 bg-green-700 hover:bg-green-800 text-white text-sm font-bold rounded transition-colors"
             >
-              LX
-            </button>
-            <button
-              onClick={() => executeAction('SX')}
-              className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded transition-colors"
-            >
-              SX
+              🟢 LX (Long Exit)
             </button>
             <button
               onClick={() => executeAction('SE')}
+              className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded transition-colors"
+            >
+              🔴 SE (Short Entry)
+            </button>
+            <button
+              onClick={() => executeAction('SX')}
               className="px-3 py-2 bg-red-700 hover:bg-red-800 text-white text-sm font-bold rounded transition-colors"
             >
-              SE
+              🔴 SX (Short Exit)
             </button>
           </div>
 
-          {/* Quantity Input */}
-          <div className="flex items-center gap-2 mt-2">
-            <label className="text-xs text-gray-300">Qty:</label>
-            <input
-              type="number"
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              min="1"
-              className="flex-1 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-sm text-white w-16 focus:outline-none focus:border-blue-400"
-            />
+          {/* Qty and Price Fields */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-gray-300 mb-1 font-bold">Qty</label>
+              <input
+                type="number"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                min="1"
+                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-400"
+                placeholder="Quantity"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-300 mb-1 font-bold">Price</label>
+              <input
+                type="number"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                disabled={marketPrice}
+                className={`w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-400 ${marketPrice ? 'opacity-50 cursor-not-allowed' : ''}`}
+                placeholder="Enter price"
+              />
+            </div>
+          </div>
+
+          {/* Market Price & Market Protection Checkboxes */}
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={marketPrice}
+                onChange={(e) => setMarketPrice(e.target.checked)}
+                className="w-4 h-4 accent-blue-500"
+              />
+              <span className="text-sm text-gray-300">Market Price</span>
+            </label>
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={marketProtection}
+                onChange={(e) => setMarketProtection(e.target.checked)}
+                className="w-4 h-4 accent-blue-500"
+              />
+              <span className="text-sm text-gray-300">Market Protection</span>
+            </label>
+          </div>
+
+          {/* Trigger Price Checkbox and Input */}
+          <div>
+            <label className="flex items-center space-x-2 cursor-pointer mb-2">
+              <input
+                type="checkbox"
+                checked={triggerEnabled}
+                onChange={(e) => setTriggerEnabled(e.target.checked)}
+                className="w-4 h-4 accent-blue-500"
+              />
+              <span className="text-sm text-gray-300 font-bold">Trigger Price</span>
+            </label>
+            {triggerEnabled && (
+              <input
+                type="number"
+                value={triggerPrice}
+                onChange={(e) => setTriggerPrice(e.target.value)}
+                className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-400"
+                placeholder="Enter trigger price"
+              />
+            )}
           </div>
 
           {/* Price Info */}
-          <div className="bg-gray-800 rounded p-2 mt-2 space-y-1 text-xs">
+          <div className="bg-gray-700 rounded p-3 space-y-1 text-xs">
             <div className="flex justify-between">
-              <span className="text-gray-400">Price</span>
+              <span className="text-gray-400">Spot Price</span>
               <span className="text-yellow-400 font-semibold">{spotPrice}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-400">Strike(CE)</span>
-              <span className="text-blue-400 font-semibold">{strike}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400">Strike(PE)</span>
-              <span className="text-red-400 font-semibold">{strike}</span>
+              <span className="text-gray-400">Strike</span>
+              <span className="text-white font-semibold">{strike}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">CE LTP</span>
@@ -141,14 +266,6 @@ const ManualTradePopup: React.FC<ManualTradePopupProps> = ({
               <span className="text-red-300 font-semibold">₹{peLTP}</span>
             </div>
           </div>
-
-          {/* Show Trade List Button */}
-          <button
-            onClick={() => alert('Trade list opened')}
-            className="w-full px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded transition-colors mt-2"
-          >
-            Show Trade List
-          </button>
         </div>
       </div>
     </div>

@@ -18,9 +18,6 @@ export default function Home() {
   const [holdMode, setHoldMode] = useState(false);
   const [showQTPPopup, setShowQTPPopup] = useState(false);
   const [qtpIndex, setQTPIndex] = useState('NIFTY');
-  const [qtpDaysOfWeek, setQtpDaysOfWeek] = useState({
-    M: true, T: true, W: true, Th: true, F: true
-  });
   
   // Strike prices per index (10 strikes each, in S1-S5 groups)
   const strikesByIndex: Record<string, { group: string; strikes: string[] }[]> = {
@@ -48,6 +45,16 @@ export default function Home() {
   };
   
   const [qtpSelectedStrikes, setQtpSelectedStrikes] = useState<Record<string, boolean>>({});
+  const [qtpQty, setQtpQty] = useState('1');
+  const [qtpPrice, setQtpPrice] = useState('');
+  const [qtpMarketPrice, setQtpMarketPrice] = useState(true);
+  const [qtpMarketProtection, setQtpMarketProtection] = useState(false);
+  const [qtpTriggerEnabled, setQtpTriggerEnabled] = useState(false);
+  const [qtpTriggerPrice, setQtpTriggerPrice] = useState('');
+  const [qtpPosition, setQtpPosition] = useState({ x: 0, y: 0 });
+  const [qtpDragging, setQtpDragging] = useState(false);
+  const [qtpDragOffset, setQtpDragOffset] = useState({ x: 0, y: 0 });
+  const qtpRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [killSwitchActive, setKillSwitchActive] = useState(false);
@@ -60,6 +67,50 @@ export default function Home() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // QTP Draggable handlers
+  const handleQtpMouseDown = (e: React.MouseEvent) => {
+    if (qtpRef.current) {
+      const rect = qtpRef.current.getBoundingClientRect();
+      setQtpDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+      setQtpDragging(true);
+    }
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (qtpDragging) {
+        setQtpPosition({
+          x: e.clientX - qtpDragOffset.x,
+          y: e.clientY - qtpDragOffset.y
+        });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setQtpDragging(false);
+    };
+
+    if (qtpDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [qtpDragging, qtpDragOffset]);
+
+  // Reset QTP position when popup opens
+  useEffect(() => {
+    if (showQTPPopup) {
+      setQtpPosition({ x: window.innerWidth / 2 - 350, y: window.innerHeight / 2 - 250 });
+    }
+  }, [showQTPPopup]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!isResizable) return;
@@ -107,11 +158,7 @@ export default function Home() {
       .filter(([_, selected]) => selected)
       .map(([strike, _]) => strike);
     
-    const selectedDays = Object.entries(qtpDaysOfWeek)
-      .filter(([_, selected]) => selected)
-      .map(([day, _]) => day);
-    
-    const message = `${actionNames[action]} initiated for ${qtpIndex}\nStrike(s): ${selectedStrikes.join(', ') || 'None'}\nDays: ${selectedDays.join(', ')}`;
+    const message = `${actionNames[action]} initiated for ${qtpIndex}\nStrike(s): ${selectedStrikes.join(', ') || 'None'}`;
     console.log(message);
     alert(`✅ ${message}`);
   };
@@ -316,20 +363,33 @@ export default function Home() {
           )}
         </div>
 
-        {/* QTP Popup - Only closes on X button */}
+        {/* QTP Popup - Only closes on X button, Draggable */}
         {showQTPPopup && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-              <div className="flex justify-between items-center mb-4">
+          <div 
+            ref={qtpRef}
+            className="fixed bg-gray-800 border border-gray-600 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto z-50 shadow-2xl"
+            style={{ 
+              left: qtpPosition.x, 
+              top: qtpPosition.y,
+              cursor: qtpDragging ? 'grabbing' : 'default'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Draggable Header */}
+            <div 
+                className="flex justify-between items-center p-4 border-b border-gray-600 cursor-grab active:cursor-grabbing bg-gray-700 rounded-t-lg"
+                onMouseDown={handleQtpMouseDown}
+              >
                 <h3 className="text-white font-bold text-lg">🎯 Quick Trade Panel (QTP)</h3>
                 <button 
                   onClick={() => setShowQTPPopup(false)}
-                  className="text-gray-400 hover:text-white text-2xl font-bold px-2 py-1 hover:bg-gray-700 rounded"
+                  className="text-gray-400 hover:text-white text-2xl font-bold px-2 py-1 hover:bg-gray-600 rounded"
                 >
                   ✕
                 </button>
               </div>
               
+              <div className="p-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left Column: Strategy Configuration */}
                 <div className="space-y-4">
@@ -381,30 +441,74 @@ export default function Home() {
                     </select>
                   </div>
 
-                  {/* Days of Week Selection */}
+                  {/* Qty and Price Fields */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm text-gray-300 mb-2 font-bold">Qty</label>
+                      <input
+                        type="number"
+                        value={qtpQty}
+                        onChange={(e) => setQtpQty(e.target.value)}
+                        min="1"
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-400"
+                        placeholder="Quantity"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-300 mb-2 font-bold">Price</label>
+                      <input
+                        type="number"
+                        value={qtpPrice}
+                        onChange={(e) => setQtpPrice(e.target.value)}
+                        disabled={qtpMarketPrice}
+                        className={`w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-400 ${qtpMarketPrice ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        placeholder="Enter price"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Market Price & Market Protection Checkboxes */}
+                  <div className="flex flex-col gap-2">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={qtpMarketPrice}
+                        onChange={(e) => setQtpMarketPrice(e.target.checked)}
+                        className="w-4 h-4 accent-blue-500"
+                      />
+                      <span className="text-sm text-gray-300">Market Price</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={qtpMarketProtection}
+                        onChange={(e) => setQtpMarketProtection(e.target.checked)}
+                        className="w-4 h-4 accent-blue-500"
+                      />
+                      <span className="text-sm text-gray-300">Market Protection</span>
+                    </label>
+                  </div>
+
+                  {/* Trigger Price Checkbox and Input */}
                   <div>
-                    <label className="block text-sm text-gray-300 mb-2 font-bold">Days to Run Strategy</label>
-                    <div className="flex gap-2">
-                      {Object.entries(qtpDaysOfWeek).map(([day, checked]) => (
-                        <label 
-                          key={day}
-                          className={`flex items-center justify-center w-10 h-10 rounded cursor-pointer transition-colors ${
-                            checked ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={(e) => setQtpDaysOfWeek(prev => ({ ...prev, [day]: e.target.checked }))}
-                            className="hidden"
-                          />
-                          <span className="font-bold text-sm">{day}</span>
-                        </label>
-                      ))}
-                    </div>
-                    <div className="text-xs text-gray-400 mt-1">
-                      M=Monday, T=Tuesday, W=Wednesday, Th=Thursday, F=Friday
-                    </div>
+                    <label className="flex items-center space-x-2 cursor-pointer mb-2">
+                      <input
+                        type="checkbox"
+                        checked={qtpTriggerEnabled}
+                        onChange={(e) => setQtpTriggerEnabled(e.target.checked)}
+                        className="w-4 h-4 accent-blue-500"
+                      />
+                      <span className="text-sm text-gray-300 font-bold">Trigger Price</span>
+                    </label>
+                    {qtpTriggerEnabled && (
+                      <input
+                        type="number"
+                        value={qtpTriggerPrice}
+                        onChange={(e) => setQtpTriggerPrice(e.target.value)}
+                        className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-400"
+                        placeholder="Enter trigger price"
+                      />
+                    )}
                   </div>
                 </div>
 
@@ -441,36 +545,8 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-
-              {/* Back Test Results */}
-              <div className="border-t border-gray-600 mt-6 pt-4">
-                <div className="flex justify-between items-center mb-3">
-                  <h4 className="text-sm text-gray-300 font-bold">📊 Back Test Results</h4>
-                  <button className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors">
-                    Run Backtest
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="bg-gray-700 rounded p-3 text-center">
-                    <div className="text-xs text-gray-400">Total Trades</div>
-                    <div className="text-lg font-bold text-white">24</div>
-                  </div>
-                  <div className="bg-gray-700 rounded p-3 text-center">
-                    <div className="text-xs text-gray-400">Win Rate</div>
-                    <div className="text-lg font-bold text-green-400">68%</div>
-                  </div>
-                  <div className="bg-gray-700 rounded p-3 text-center">
-                    <div className="text-xs text-gray-400">Total P&L</div>
-                    <div className="text-lg font-bold text-green-400">₹45,230</div>
-                  </div>
-                  <div className="bg-gray-700 rounded p-3 text-center">
-                    <div className="text-xs text-gray-400">Max Drawdown</div>
-                    <div className="text-lg font-bold text-red-400">₹8,450</div>
-                  </div>
-                </div>
               </div>
             </div>
-          </div>
         )}
       </div>
     </MainLayout>
