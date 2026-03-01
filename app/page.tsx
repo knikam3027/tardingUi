@@ -6,7 +6,6 @@ import StrikePricesTable from "@/components/StrikePricesTable";
 import OngoingTradesTable from "@/components/OngoingTradesTable";
 import AccountSummary from "@/components/AccountSummary";
 import MobileTradingDashboard from "@/components/MobileTradingDashboard";
-import TradingHistory from "@/components/TradingHistory";
 import TradingChart from "@/components/TradingChart";
 
 export default function Home() {
@@ -133,10 +132,17 @@ export default function Home() {
         {/* Header Controls */}
         <div className="mb-2 flex flex-wrap gap-3 items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1 className="text-lg font-bold text-gray-200 flex items-center gap-2">
-              📈 Trading Dashboard
-              <span className="text-xs bg-green-600 px-2 py-1 rounded-full">LIVE</span>
-            </h1>
+            {/* Status Bar - moved from bottom */}
+            <div className="flex items-center gap-4 text-xs text-gray-400">
+              <span>📅 {mounted ? new Date().toLocaleDateString() : '--'}</span>
+              <span>🕐 Last Updated: {mounted ? new Date().toLocaleTimeString() : '--:--:--'}</span>
+              <span className="text-green-400">🟢 Connected</span>
+            </div>
+            <div className="hidden lg:flex items-center gap-4 text-xs">
+              <span className="text-white">NIFTY: <span className="text-green-400">25,850 (+0.8%)</span></span>
+              <span className="text-white">BANK NIFTY: <span className="text-red-400">53,420 (-0.3%)</span></span>
+              <span className="text-white">VIX: <span className="text-yellow-400">14.2</span></span>
+            </div>
             
             {/* View Switcher */}
             <div className="hidden lg:flex gap-1 bg-gray-800 rounded-lg p-1">
@@ -159,57 +165,6 @@ export default function Home() {
                 }`}
               >
                 📈 Charts
-              </button>
-            </div>
-          </div>
-          
-          {/* Desktop Controls */}
-          <div className="hidden lg:flex flex-wrap gap-2 items-center">
-            <button
-              onClick={() => setIsResizable(!isResizable)}
-              className={`px-3 py-1 rounded text-xs transition-colors flex items-center gap-1 ${
-                isResizable ? 'bg-blue-600 text-white' : 'bg-gray-600 text-gray-200'
-              }`}
-            >
-              🔧 {isResizable ? 'Lock Layout' : 'Unlock Layout'}
-            </button>
-            
-            {isResizable && (
-              <>
-                <div className="flex items-center gap-2 text-xs">
-                  <label className="text-gray-400">Width:</label>
-                  <input
-                    type="range"
-                    min="20"
-                    max="80"
-                    value={leftWidth}
-                    onChange={(e) => setLeftWidth(Number(e.target.value))}
-                    className="w-20"
-                  />
-                  <span className="text-gray-300 w-8">{leftWidth}%</span>
-                </div>
-                
-                <div className="flex items-center gap-2 text-xs">
-                  <label className="text-gray-400">Height:</label>
-                  <input
-                    type="range"
-                    min="300"
-                    max="800"
-                    value={tableHeight}
-                    onChange={(e) => setTableHeight(Number(e.target.value))}
-                    className="w-20"
-                  />
-                  <span className="text-gray-300 w-12">{tableHeight}px</span>
-                </div>
-              </>
-            )}
-
-            <div className="flex gap-1">
-              <button
-                onClick={() => { setLeftWidth(50); setTableHeight(500); }}
-                className="px-2 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded transition-colors"
-              >
-                Reset
               </button>
             </div>
           </div>
@@ -324,9 +279,6 @@ export default function Home() {
 
                 {/* Ongoing Trades Table */}
                 <OngoingTradesTable />
-
-                {/* Trading History Section */}
-                <TradingHistory />
               </div>
             </>
           ) : (
@@ -337,9 +289,7 @@ export default function Home() {
               </div>
               
               {/* Chart-specific controls */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <TradingHistory />
-                <div className="bg-[#111827] border border-gray-700 rounded-lg p-4">
+              <div className="bg-[#111827] border border-gray-700 rounded-lg p-4">
                   <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
                     📊 Market Analysis
                   </h3>
@@ -362,7 +312,6 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
-              </div>
             </div>
           )}
         </div>
@@ -523,20 +472,6 @@ export default function Home() {
             </div>
           </div>
         )}
-
-        {/* Status Bar - Desktop */}
-        <div className="hidden lg:flex flex-wrap gap-4 items-center justify-between text-xs text-gray-400 pt-2 border-t border-gray-800 mt-2">
-          <div className="flex gap-4">
-            <span>📅 {mounted ? new Date().toLocaleDateString() : '--'}</span>
-            <span>🕐 Last Updated: {mounted ? new Date().toLocaleTimeString() : '--:--:--'}</span>
-            <span className="text-green-400">🟢 Connected</span>
-          </div>
-          <div className="flex gap-4">
-            <span>NIFTY: 25,850 (+0.8%)</span>
-            <span>BANK NIFTY: 53,420 (-0.3%)</span>
-            <span>VIX: 14.2</span>
-          </div>
-        </div>
       </div>
     </MainLayout>
   );
