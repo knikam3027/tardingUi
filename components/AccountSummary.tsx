@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface Account {
   id: string;
@@ -41,9 +41,63 @@ const AccountSummary = ({ className = "" }: { className?: string }) => {
     trigger: string;
     strike: string;
     price: string;
+    ceStrike: string;
+    peStrike: string;
+    cePrice: string;
+    pePrice: string;
     position: { x: number; y: number };
   } | null>(null);
   const [triggerCallPut, setTriggerCallPut] = useState({ call: true, put: false });
+  
+  // Draggable popup state
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const popupRef = useRef<HTMLDivElement>(null);
+  
+  // Handle dragging
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (popupRef.current) {
+      const rect = popupRef.current.getBoundingClientRect();
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+      setIsDragging(true);
+    }
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) {
+        setPopupPosition({
+          x: e.clientX - dragOffset.x,
+          y: e.clientY - dragOffset.y
+        });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragOffset]);
+
+  // Set initial popup position when it opens
+  useEffect(() => {
+    if (triggerPopup?.show) {
+      setPopupPosition(triggerPopup.position);
+    }
+  }, [triggerPopup?.show]);
   
   useEffect(() => {
     setMounted(true);
@@ -76,7 +130,11 @@ const AccountSummary = ({ className = "" }: { className?: string }) => {
       s: "1",
       b: "0",
       slTrgt: "300/600",
-      isPositive: true
+      isPositive: true,
+      ceStrike: "25200",
+      peStrike: "25200",
+      cePrice: "128.75",
+      pePrice: "210.60"
     },
     {
       strike: "OTM1",
@@ -90,7 +148,11 @@ const AccountSummary = ({ className = "" }: { className?: string }) => {
       s: "0",
       b: "1",
       slTrgt: "250/500",
-      isPositive: true
+      isPositive: true,
+      ceStrike: "25300",
+      peStrike: "25300",
+      cePrice: "95.50",
+      pePrice: "185.25"
     }
   ];
 
@@ -110,6 +172,10 @@ const AccountSummary = ({ className = "" }: { className?: string }) => {
       trigger: trade.trigger,
       strike: trade.strike,
       price: trade.price,
+      ceStrike: trade.ceStrike,
+      peStrike: trade.peStrike,
+      cePrice: trade.cePrice,
+      pePrice: trade.pePrice,
       position: { x: rect.left, y: rect.bottom + 5 }
     });
   };
@@ -383,19 +449,24 @@ const AccountSummary = ({ className = "" }: { className?: string }) => {
       {/* Trigger Popup (no background overlay) */}
       {triggerPopup?.show && (
         <div 
+          ref={popupRef}
           className="fixed z-50 bg-[#c0c8d4] border-2 border-blue-600 rounded shadow-xl"
           style={{ 
-            left: Math.min(triggerPopup.position.x, window.innerWidth - 200),
-            top: triggerPopup.position.y 
+            left: popupPosition.x,
+            top: popupPosition.y,
+            cursor: isDragging ? 'grabbing' : 'default'
           }}
         >
-          {/* Header with Trade button */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-400">
+          {/* Header with Trade button - Draggable */}
+          <div 
+            className="flex items-center justify-between px-3 py-2 border-b border-gray-400 cursor-grab active:cursor-grabbing"
+            onMouseDown={handleMouseDown}
+          >
             <button
               onClick={() => alert('Trade executed!')}
               className="px-4 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded transition-colors"
             >
-              Trade
+              {triggerPopup?.strike}
             </button>
             <button
               onClick={() => setTriggerPopup(null)}
@@ -442,11 +513,19 @@ const AccountSummary = ({ className = "" }: { className?: string }) => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Strike(CE)</span>
-                <span className="text-black font-semibold">25200</span>
+                <span className="text-black font-semibold">{triggerPopup?.ceStrike}</span>
+              </div>
+              <div className="flex justify-between pl-4">
+                <span className="text-gray-500 text-[10px]">CE Price</span>
+                <span className="text-blue-600 font-semibold">₹{triggerPopup?.cePrice}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Strike(PE)</span>
-                <span className="text-black font-semibold">25200</span>
+                <span className="text-black font-semibold">{triggerPopup?.peStrike}</span>
+              </div>
+              <div className="flex justify-between pl-4">
+                <span className="text-gray-500 text-[10px]">PE Price</span>
+                <span className="text-red-600 font-semibold">₹{triggerPopup?.pePrice}</span>
               </div>
             </div>
 

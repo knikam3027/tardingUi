@@ -100,10 +100,10 @@ const ManualTradePopup: React.FC<ManualTradePopupProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed z-50" onClick={(e) => e.stopPropagation()}>
       <div 
         ref={popupRef}
-        className="bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-80 text-white absolute"
+        className="bg-gray-800 border border-gray-600 rounded-lg shadow-xl w-80 text-white fixed"
         style={{ 
           left: position.x, 
           top: position.y,
