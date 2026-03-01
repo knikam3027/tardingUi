@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from "react";
-import { Menu, Settings, X, User } from "lucide-react";
+import { Menu, Settings, X, User, MoreVertical } from "lucide-react";
 import AITradingChat from '../AITradingChat';
 
 interface User {
@@ -17,6 +17,8 @@ interface NavbarProps {
   onSettingsClick: () => void;
   onMobileMenuToggle: () => void;
   isMobileMenuOpen: boolean;
+  isSidebarVisible: boolean;
+  onSidebarToggle: () => void;
   user?: User;
   onLogin: () => void;
   onLogout: () => void;
@@ -26,6 +28,8 @@ const Navbar: React.FC<NavbarProps> = ({
   onSettingsClick, 
   onMobileMenuToggle, 
   isMobileMenuOpen,
+  isSidebarVisible,
+  onSidebarToggle,
   user,
   onLogin,
   onLogout
@@ -39,11 +43,21 @@ const Navbar: React.FC<NavbarProps> = ({
         
         {/* Left side - Logo and Brand */}
         <div className="flex items-center space-x-3">
+          {/* Mobile menu toggle */}
           <button
             onClick={onMobileMenuToggle}
             className="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
           >
             {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+          
+          {/* Desktop sidebar toggle - three dots */}
+          <button
+            onClick={onSidebarToggle}
+            className="hidden lg:flex p-2 rounded-md text-gray-600 hover:bg-gray-100 transition-colors"
+            title={isSidebarVisible ? 'Hide Sidebar' : 'Show Sidebar'}
+          >
+            <MoreVertical size={20} />
           </button>
           
           <div className="flex items-center space-x-2">

@@ -19,13 +19,14 @@ interface ChatMessage {
 
 interface SidebarProps {
   isMobileMenuOpen: boolean;
+  isSidebarVisible: boolean;
   onSettingsClick: () => void;
   onTradingClick: () => void;
   onAIAssistantClick: () => void;
   onClose: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isMobileMenuOpen, onSettingsClick, onTradingClick, onAIAssistantClick, onClose }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isMobileMenuOpen, isSidebarVisible, onSettingsClick, onTradingClick, onAIAssistantClick, onClose }) => {
   // AI Chat state from local version
   const [showAIChat, setShowAIChat] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -158,7 +159,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isMobileMenuOpen, onSettingsClick, on
   return (
     <aside className={`
       fixed top-14 left-0 bottom-0 w-56 bg-white/95 border-r border-gray-200 z-40 transition-transform duration-300
-      ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+      ${isSidebarVisible ? 'lg:translate-x-0' : 'lg:-translate-x-full'}
     `}>
       <nav className="h-full overflow-auto px-4 py-6">
         {/* User Account Section */}

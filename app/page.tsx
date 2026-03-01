@@ -220,9 +220,9 @@ export default function Home() {
             <span className="text-white">Hold (3 candles)</span>
           </label>
 
-          {/* MTM Trailing for all indices */}
+          {/* T.MTM Trailing for all indices */}
           <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-700 rounded text-sm">
-            <span className="text-gray-300 font-medium">MTM:</span>
+            <span className="text-gray-300 font-medium">T.MTM:</span>
             <div className="flex items-center gap-1">
               <span className="text-green-400 text-xs">Trgt</span>
               <input

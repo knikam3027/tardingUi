@@ -23,6 +23,7 @@ const MainLayout: React.FC<Props> = ({ children }) => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isStrategyOpen, setIsStrategyOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [user, setUser] = useState<User | null>(null);
 
   // Load user from localStorage on component mount
@@ -51,6 +52,8 @@ const MainLayout: React.FC<Props> = ({ children }) => {
         onSettingsClick={() => setIsSettingsOpen(true)}
         onMobileMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         isMobileMenuOpen={isMobileMenuOpen}
+        isSidebarVisible={isSidebarVisible}
+        onSidebarToggle={() => setIsSidebarVisible(!isSidebarVisible)}
         user={user || undefined}
         onLogin={() => setIsLoginOpen(true)}
         onLogout={handleLogout}
@@ -59,6 +62,7 @@ const MainLayout: React.FC<Props> = ({ children }) => {
       <div className="flex">
         <Sidebar 
           isMobileMenuOpen={isMobileMenuOpen}
+          isSidebarVisible={isSidebarVisible}
           onSettingsClick={() => setIsSettingsOpen(true)}
           onTradingClick={() => setIsStrategyOpen(true)}
           onAIAssistantClick={() => {}}
@@ -66,7 +70,7 @@ const MainLayout: React.FC<Props> = ({ children }) => {
         />
         
         {/* Main Content */}
-        <main className="flex-1 pt-14 lg:pl-56 min-h-screen bg-zinc-50 transition-all duration-300">
+        <main className={`flex-1 pt-14 min-h-screen bg-zinc-50 transition-all duration-300 ${isSidebarVisible ? 'lg:pl-56' : 'lg:pl-0'}`}>
           <div className="w-full px-1">
             {children}
           </div>
