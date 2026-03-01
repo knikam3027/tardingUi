@@ -257,6 +257,9 @@ export default function StrategySettingsModal({
   // Short Strategy
   const [enableShort, setEnableShort] = useState(true);
   const [shortLots, setShortLots] = useState('2');
+  const [shortDays, setShortDays] = useState({
+    mon: true, tue: true, wed: true, thu: true, fri: true
+  });
   const [maxShortTrades, setMaxShortTrades] = useState('0');
   const [shortStartTime, setShortStartTime] = useState('14:00');
   const [ignoreLogicShort, setIgnoreLogicShort] = useState(false);
@@ -277,6 +280,9 @@ export default function StrategySettingsModal({
   // Long Strategy
   const [enableLong, setEnableLong] = useState(true);
   const [longLots, setLongLots] = useState('6');
+  const [longDays, setLongDays] = useState({
+    mon: true, tue: true, wed: true, thu: true, fri: true
+  });
   const [maxLongTrades, setMaxLongTrades] = useState('1');
   const [longStartTime, setLongStartTime] = useState('09:30');
   const [ignoreLogicLong, setIgnoreLogicLong] = useState(true);
@@ -804,6 +810,22 @@ export default function StrategySettingsModal({
                     />
                   </div>
 
+                  {/* Short Days Selection */}
+                  <div className="flex items-center gap-3">
+                    <label className="text-[#d1d4dc] min-w-[100px]">Trade Days</label>
+                    {(['mon', 'tue', 'wed', 'thu', 'fri'] as const).map((day) => (
+                      <label key={day} className="flex items-center gap-1 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={shortDays[day]}
+                          onChange={(e) => setShortDays({ ...shortDays, [day]: e.target.checked })}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-[#d1d4dc] text-sm capitalize">{day}</span>
+                      </label>
+                    ))}
+                  </div>
+
                   {/* Max Trades */}
                   <div className="flex items-center gap-3">
                     <label className="text-[#d1d4dc] min-w-[140px]">Max Short Trades (0=Unl.)</label>
@@ -966,6 +988,22 @@ export default function StrategySettingsModal({
                       onChange={(e) => setLongLots(e.target.value)}
                       className="bg-[#2a2e39] border border-[#3a3e49] rounded px-3 py-1 text-[#d1d4dc] w-16"
                     />
+                  </div>
+
+                  {/* Long Days Selection */}
+                  <div className="flex items-center gap-3">
+                    <label className="text-[#d1d4dc] min-w-[100px]">Trade Days</label>
+                    {(['mon', 'tue', 'wed', 'thu', 'fri'] as const).map((day) => (
+                      <label key={day} className="flex items-center gap-1 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={longDays[day]}
+                          onChange={(e) => setLongDays({ ...longDays, [day]: e.target.checked })}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-[#d1d4dc] text-sm capitalize">{day}</span>
+                      </label>
+                    ))}
                   </div>
 
                   {/* Max Trades */}
