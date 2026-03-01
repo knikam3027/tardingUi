@@ -52,6 +52,7 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [killSwitchActive, setKillSwitchActive] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState('NIFTY');
   
   // MTM Trailing for all indices
   const [mtmTarget, setMtmTarget] = useState('');
@@ -130,7 +131,7 @@ export default function Home() {
       >
         
         {/* Header Controls */}
-        <div className="mb-4 flex flex-wrap gap-3 items-center justify-between">
+        <div className="mb-2 flex flex-wrap gap-3 items-center justify-between">
           <div className="flex items-center gap-4">
             <h1 className="text-lg font-bold text-gray-200 flex items-center gap-2">
               📈 Trading Dashboard
@@ -214,99 +215,25 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Mobile Dashboard Component */}
-        <MobileTradingDashboard />
+        {/* Auto Action Buttons - Desktop (below header) */}
+        <div className="hidden lg:flex flex-wrap gap-2 mb-2 items-center">
+          {/* Index Selector */}
+          <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
+            {['NIFTY', 'SENSEX', 'BANKNIFTY'].map((index) => (
+              <button
+                key={index}
+                onClick={() => setSelectedIndex(index)}
+                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                  selectedIndex === index
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                }`}
+              >
+                {index}
+              </button>
+            ))}
+          </div>
 
-        {/* Desktop Layout */}
-        <div className="hidden lg:block">
-          {activeView === 'tables' ? (
-            <>
-              {/* Trading Tables Section */}
-              <div className="space-y-4">
-                {/* Strike Prices Table and Account Summary */}
-                <div 
-                  ref={containerRef}
-                  className="flex gap-1 transition-all duration-300 relative"
-                >
-                  <div 
-                    className="transition-all duration-300 overflow-hidden"
-                    style={{ 
-                      width: `${leftWidth}%`,
-                      height: `${tableHeight}px`
-                    }}
-                  >
-                    <StrikePricesTable className="h-full" />
-                  </div>
-                  
-                  {/* Resizer Handle */}
-                  {isResizable && (
-                    <div
-                      onMouseDown={handleMouseDown}
-                      className={`w-1 bg-gray-600 hover:bg-blue-500 cursor-col-resize transition-colors z-10 ${
-                        isDragging ? 'bg-blue-500' : ''
-                      }`}
-                      title="Drag to resize"
-                    />
-                  )}
-                  
-                  <div 
-                    className="transition-all duration-300 overflow-hidden"
-                    style={{ 
-                      width: `${100 - leftWidth}%`,
-                      height: `${tableHeight}px`
-                    }}
-                  >
-                    <AccountSummary className="h-full" />
-                  </div>
-                </div>
-
-                {/* Ongoing Trades Table */}
-                <OngoingTradesTable />
-
-                {/* Trading History Section */}
-                <TradingHistory />
-              </div>
-            </>
-          ) : (
-            /* Chart View */
-            <div className="space-y-4">
-              <div style={{ height: `${tableHeight + 100}px` }}>
-                <TradingChart className="h-full" />
-              </div>
-              
-              {/* Chart-specific controls */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <TradingHistory />
-                <div className="bg-[#111827] border border-gray-700 rounded-lg p-4">
-                  <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                    📊 Market Analysis
-                  </h3>
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Trend:</span>
-                      <span className="text-green-400 font-semibold">BULLISH</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Support:</span>
-                      <span className="text-blue-400 font-semibold">25,750</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Resistance:</span>
-                      <span className="text-red-400 font-semibold">26,100</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Volatility:</span>
-                      <span className="text-orange-400 font-semibold">MEDIUM</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Auto Action Buttons - Desktop */}
-        <div className="hidden lg:flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-700">
           {/* Engine Control */}
           <button 
             onClick={handleEngineToggle}
@@ -374,9 +301,70 @@ export default function Home() {
           <button className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm transition-colors flex items-center gap-2">
             🔄 Refresh Data
           </button>
-          <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm transition-colors flex items-center gap-2">
-            📊 Analytics
-          </button>
+        </div>
+
+        {/* Mobile Dashboard Component */}
+        <MobileTradingDashboard />
+
+        {/* Desktop Layout */}
+        <div className="hidden lg:block">
+          {activeView === 'tables' ? (
+            <>
+              {/* Trading Tables Section */}
+              <div>
+                {/* Strike Prices Table */}
+                <div ref={containerRef}>
+                  <StrikePricesTable />
+                </div>
+
+                {/* Account Summary */}
+                <div>
+                  <AccountSummary />
+                </div>
+
+                {/* Ongoing Trades Table */}
+                <OngoingTradesTable />
+
+                {/* Trading History Section */}
+                <TradingHistory />
+              </div>
+            </>
+          ) : (
+            /* Chart View */
+            <div className="space-y-4">
+              <div style={{ height: `${tableHeight + 100}px` }}>
+                <TradingChart className="h-full" />
+              </div>
+              
+              {/* Chart-specific controls */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <TradingHistory />
+                <div className="bg-[#111827] border border-gray-700 rounded-lg p-4">
+                  <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                    📊 Market Analysis
+                  </h3>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Trend:</span>
+                      <span className="text-green-400 font-semibold">BULLISH</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Support:</span>
+                      <span className="text-blue-400 font-semibold">25,750</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Resistance:</span>
+                      <span className="text-red-400 font-semibold">26,100</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Volatility:</span>
+                      <span className="text-orange-400 font-semibold">MEDIUM</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* QTP Popup - Only closes on X button */}

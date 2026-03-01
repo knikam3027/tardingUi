@@ -297,7 +297,7 @@ const StrikePricesTable = ({ className = "" }: { className?: string }) => {
         <table className="w-full text-[11px] border-collapse min-w-[1200px]">
           <thead className="bg-[#1d4ed8]">
             <tr>
-              {["STRIKE", "OPEN", "LTP", "CHANGE", "LEAD", "REGIME", "IND.REG", "T.MODE", "T.TYPE", "C.VOLUME", "C.DELTA", "C.IV", "CE", "PE", "SL/TGT", "MTM", "MANUAL"].map(h => (
+              {["STRIKE", "OPEN", "LTP", "CHANGE", "LEAD", "REGIME", "IND.REG", "T.MODE", "T.TYPE", "C.VOLUME", "C.DELTA", "C.IV", "CE", "PE", "MANUAL"].map(h => (
                 <th key={h} className="px-2 py-1 text-left font-bold text-white border-r border-blue-900 whitespace-nowrap">
                   {h}
                 </th>
@@ -333,37 +333,6 @@ const StrikePricesTable = ({ className = "" }: { className?: string }) => {
                 <td className="px-2 py-1 text-purple-400 font-semibold">{row.cIV}</td>
                 <td className="px-2 py-1 text-blue-300 font-semibold">{row.ce}</td>
                 <td className="px-2 py-1 text-red-300 font-semibold">{row.pe}</td>
-                
-                {/* SL/TGT Column */}
-                <td className="px-2 py-1">
-                  <input 
-                    type="text" 
-                    placeholder="SL/TGT"
-                    defaultValue={trailingSLValues[row.strike] || ''}
-                    onChange={(e) => setTrailingSLValues({...trailingSLValues, [row.strike]: e.target.value})}
-                    className="w-14 px-1 py-0.5 bg-gray-700 text-white text-[10px] rounded border border-gray-600 focus:border-blue-400 focus:outline-none"
-                  />
-                </td>
-
-                {/* MTM Trailing Column (Two text boxes) */}
-                <td className="px-2 py-1">
-                  <div className="flex gap-0.5">
-                    <input 
-                      type="text" 
-                      placeholder="Act"
-                      defaultValue={mtmValues[`${row.strike}_act`] || ''}
-                      onChange={(e) => setMtmValues({...mtmValues, [`${row.strike}_act`]: e.target.value})}
-                      className="w-8 px-0.5 py-0.5 bg-gray-700 text-white text-[10px] rounded border border-gray-600 focus:border-blue-400 focus:outline-none"
-                    />
-                    <input 
-                      type="text" 
-                      placeholder="Dist"
-                      defaultValue={mtmValues[`${row.strike}_dist`] || ''}
-                      onChange={(e) => setMtmValues({...mtmValues, [`${row.strike}_dist`]: e.target.value})}
-                      className="w-8 px-0.5 py-0.5 bg-gray-700 text-white text-[10px] rounded border border-gray-600 focus:border-blue-400 focus:outline-none"
-                    />
-                  </div>
-                </td>
 
                 {/* MANUAL Column */}
                 <td className="px-2 py-1">
