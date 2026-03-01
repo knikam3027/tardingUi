@@ -389,28 +389,14 @@ const AccountSummary = ({ className = "" }: { className?: string }) => {
             top: triggerPopup.position.y 
           }}
         >
-          {/* Header with CALL/PUT checkboxes */}
+          {/* Header with Trade button */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-gray-400">
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-1 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={triggerCallPut.call}
-                  onChange={() => setTriggerCallPut(prev => ({ ...prev, call: !prev.call }))}
-                  className="w-4 h-4 accent-blue-600"
-                />
-                <span className="text-sm font-bold text-blue-800">CALL</span>
-              </label>
-              <label className="flex items-center gap-1 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={triggerCallPut.put}
-                  onChange={() => setTriggerCallPut(prev => ({ ...prev, put: !prev.put }))}
-                  className="w-4 h-4 accent-blue-600"
-                />
-                <span className="text-sm font-bold text-blue-800">PUT</span>
-              </label>
-            </div>
+            <button
+              onClick={() => alert('Trade executed!')}
+              className="px-4 py-1 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded transition-colors"
+            >
+              Trade
+            </button>
             <button
               onClick={() => setTriggerPopup(null)}
               className="text-gray-600 hover:text-black text-lg font-bold leading-none ml-2"
