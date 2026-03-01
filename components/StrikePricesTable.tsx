@@ -367,26 +367,20 @@ const StrikePricesTable = ({ className = "" }: { className?: string }) => {
 
                 {/* MANUAL Column */}
                 <td className="px-2 py-1">
-                  <div className="flex items-center space-x-1">
-                    <label className="flex items-center space-x-1 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={manualCheckboxState[row.strike]?.ce || false}
-                        onChange={() => handleManualCheckbox(row.strike, 'ce', row)}
-                        className="w-3 h-3 accent-blue-500" 
-                      />
-                      <span className="text-[10px] text-blue-400">CE</span>
-                    </label>
-                    <label className="flex items-center space-x-1 cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={manualCheckboxState[row.strike]?.pe || false}
-                        onChange={() => handleManualCheckbox(row.strike, 'pe', row)}
-                        className="w-3 h-3 accent-red-500" 
-                      />
-                      <span className="text-[10px] text-red-400">PE</span>
-                    </label>
-                  </div>
+                  <button
+                    onClick={() => {
+                      setManualPopupData({
+                        strike: row.strike,
+                        ce: row.ce,
+                        pe: row.pe,
+                        ltp: row.ltp
+                      });
+                      setShowManualPopup(true);
+                    }}
+                    className="px-2 py-0.5 bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold rounded transition-colors"
+                  >
+                    Trade
+                  </button>
                 </td>
               </tr>
             ))}
