@@ -19,13 +19,43 @@ export default function Home() {
   const [holdMode, setHoldMode] = useState(false);
   const [showQTPPopup, setShowQTPPopup] = useState(false);
   const [qtpIndex, setQTPIndex] = useState('NIFTY');
-  const [qtpDays, setQTPDays] = useState('5');
-  const [qtpStrikes, setQTPStrikes] = useState({
-    S1: false, S2: true, S3: true, S4: true, S5: false
+  const [qtpDaysOfWeek, setQtpDaysOfWeek] = useState({
+    M: true, T: true, W: true, Th: true, F: true
   });
+  
+  // Strike prices per index (10 strikes each, in S1-S5 groups)
+  const strikesByIndex: Record<string, { group: string; strikes: string[] }[]> = {
+    NIFTY: [
+      { group: 'S1', strikes: ['25600', '25650'] },
+      { group: 'S2', strikes: ['25700', '25750'] },
+      { group: 'S3', strikes: ['25800', '25850'] },
+      { group: 'S4', strikes: ['25900', '25950'] },
+      { group: 'S5', strikes: ['26000', '26050'] },
+    ],
+    BANKNIFTY: [
+      { group: 'S1', strikes: ['53000', '53100'] },
+      { group: 'S2', strikes: ['53200', '53300'] },
+      { group: 'S3', strikes: ['53400', '53500'] },
+      { group: 'S4', strikes: ['53600', '53700'] },
+      { group: 'S5', strikes: ['53800', '53900'] },
+    ],
+    FINNIFTY: [
+      { group: 'S1', strikes: ['24800', '24850'] },
+      { group: 'S2', strikes: ['24900', '24950'] },
+      { group: 'S3', strikes: ['25000', '25050'] },
+      { group: 'S4', strikes: ['25100', '25150'] },
+      { group: 'S5', strikes: ['25200', '25250'] },
+    ],
+  };
+  
+  const [qtpSelectedStrikes, setQtpSelectedStrikes] = useState<Record<string, boolean>>({});
   const [mounted, setMounted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [killSwitchActive, setKillSwitchActive] = useState(false);
+  
+  // MTM Trailing for all indices
+  const [mtmTarget, setMtmTarget] = useState('');
+  const [mtmSL, setMtmSL] = useState('');
 
   useEffect(() => {
     setMounted(true);
@@ -73,14 +103,17 @@ export default function Home() {
       'SX': 'Short Exit'
     };
     
-    const selectedStrikes = Object.entries(qtpStrikes)
+    const selectedStrikes = Object.entries(qtpSelectedStrikes)
       .filter(([_, selected]) => selected)
       .map(([strike, _]) => strike);
     
-    const message = `${actionNames[action]} initiated for ${qtpIndex}\nStrike(s): ${selectedStrikes.join(', ')}\nDays: ${qtpDays}`;
+    const selectedDays = Object.entries(qtpDaysOfWeek)
+      .filter(([_, selected]) => selected)
+      .map(([day, _]) => day);
+    
+    const message = `${actionNames[action]} initiated for ${qtpIndex}\nStrike(s): ${selectedStrikes.join(', ') || 'None'}\nDays: ${selectedDays.join(', ')}`;
     console.log(message);
     alert(`✅ ${message}`);
-    setShowQTPPopup(false);
   };
 
   if (!mounted) {
@@ -305,6 +338,31 @@ export default function Home() {
             <span className="text-white">Hold (3 candles)</span>
           </label>
 
+          {/* MTM Trailing for all indices */}
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-700 rounded text-sm">
+            <span className="text-gray-300 font-medium">MTM:</span>
+            <div className="flex items-center gap-1">
+              <span className="text-green-400 text-xs">Trgt</span>
+              <input
+                type="text"
+                value={mtmTarget}
+                onChange={(e) => setMtmTarget(e.target.value)}
+                placeholder="0"
+                className="w-14 px-2 py-1 bg-gray-800 border border-gray-600 rounded text-white text-xs focus:outline-none focus:border-green-400"
+              />
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-red-400 text-xs">SL</span>
+              <input
+                type="text"
+                value={mtmSL}
+                onChange={(e) => setMtmSL(e.target.value)}
+                placeholder="0"
+                className="w-14 px-2 py-1 bg-gray-800 border border-gray-600 rounded text-white text-xs focus:outline-none focus:border-red-400"
+              />
+            </div>
+          </div>
+
           {/* QTP Button */}
           <button 
             onClick={() => setShowQTPPopup(true)}
@@ -321,15 +379,15 @@ export default function Home() {
           </button>
         </div>
 
-        {/* QTP Popup */}
+        {/* QTP Popup - Only closes on X button */}
         {showQTPPopup && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={(e) => e.stopPropagation()}>
-            <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-gray-800 border border-gray-600 rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-white font-bold text-lg">🎯 Quick Trade Panel (QTP)</h3>
                 <button 
                   onClick={() => setShowQTPPopup(false)}
-                  className="text-gray-400 hover:text-white text-2xl font-bold"
+                  className="text-gray-400 hover:text-white text-2xl font-bold px-2 py-1 hover:bg-gray-700 rounded"
                 >
                   ✕
                 </button>
@@ -350,21 +408,21 @@ export default function Home() {
                       </button>
                       <button
                         onClick={() => handleQTPAction('LX')}
-                        className="bg-red-600 hover:bg-red-700 text-white py-3 rounded font-bold text-sm transition-colors"
+                        className="bg-green-700 hover:bg-green-800 text-white py-3 rounded font-bold text-sm transition-colors"
                       >
-                        🔴 LX (Long Exit)
+                        🟢 LX (Long Exit)
                       </button>
                       <button
                         onClick={() => handleQTPAction('SE')}
-                        className="bg-orange-600 hover:bg-orange-700 text-white py-3 rounded font-bold text-sm transition-colors"
+                        className="bg-red-600 hover:bg-red-700 text-white py-3 rounded font-bold text-sm transition-colors"
                       >
-                        🟠 SE (Short Entry)
+                        🔴 SE (Short Entry)
                       </button>
                       <button
                         onClick={() => handleQTPAction('SX')}
-                        className="bg-purple-600 hover:bg-purple-700 text-white py-3 rounded font-bold text-sm transition-colors"
+                        className="bg-red-700 hover:bg-red-800 text-white py-3 rounded font-bold text-sm transition-colors"
                       >
-                        🟣 SX (Short Exit)
+                        🔴 SX (Short Exit)
                       </button>
                     </div>
                   </div>
@@ -374,7 +432,10 @@ export default function Home() {
                     <label className="block text-sm text-gray-300 mb-2 font-bold">Select Index</label>
                     <select 
                       value={qtpIndex} 
-                      onChange={(e) => setQTPIndex(e.target.value)}
+                      onChange={(e) => {
+                        setQTPIndex(e.target.value);
+                        setQtpSelectedStrikes({});
+                      }}
                       className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-400"
                     >
                       <option value="NIFTY">NIFTY</option>
@@ -383,49 +444,75 @@ export default function Home() {
                     </select>
                   </div>
 
-                  {/* Days Selection */}
+                  {/* Days of Week Selection */}
                   <div>
                     <label className="block text-sm text-gray-300 mb-2 font-bold">Days to Run Strategy</label>
-                    <input
-                      type="number"
-                      value={qtpDays}
-                      onChange={(e) => setQTPDays(e.target.value)}
-                      className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white focus:outline-none focus:border-blue-400"
-                      min="1"
-                      max="30"
-                      placeholder="Enter number of days"
-                    />
+                    <div className="flex gap-2">
+                      {Object.entries(qtpDaysOfWeek).map(([day, checked]) => (
+                        <label 
+                          key={day}
+                          className={`flex items-center justify-center w-10 h-10 rounded cursor-pointer transition-colors ${
+                            checked ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => setQtpDaysOfWeek(prev => ({ ...prev, [day]: e.target.checked }))}
+                            className="hidden"
+                          />
+                          <span className="font-bold text-sm">{day}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      M=Monday, T=Tuesday, W=Wednesday, Th=Thursday, F=Friday
+                    </div>
                   </div>
                 </div>
 
-                {/* Right Column: Strike Selection */}
+                {/* Right Column: Strike Selection (10 strikes in S1-S5 groups) */}
                 <div>
-                  <label className="block text-sm text-gray-300 mb-2 font-bold">Select Strike Prices (S1 to S5)</label>
-                  <div className="grid grid-cols-5 gap-2 bg-gray-700 p-3 rounded max-h-48 overflow-y-auto">
-                    {Object.entries(qtpStrikes).map(([key, value]) => (
-                      <label 
-                        key={key} 
-                        className="flex items-center space-x-1 bg-gray-600 p-2 rounded hover:bg-gray-500 cursor-pointer transition-colors"
-                      >
-                        <input 
-                          type="checkbox" 
-                          checked={value}
-                          onChange={(e) => setQTPStrikes(prev => ({ ...prev, [key]: e.target.checked }))}
-                          className="w-4 h-4 text-blue-600 rounded" 
-                        />
-                        <span className="text-sm text-gray-200 font-semibold">{key}</span>
-                      </label>
+                  <label className="block text-sm text-gray-300 mb-2 font-bold">Select Strike Prices ({qtpIndex}) - S1 to S5</label>
+                  <div className="bg-gray-700 p-3 rounded max-h-64 overflow-y-auto space-y-3">
+                    {strikesByIndex[qtpIndex]?.map((group) => (
+                      <div key={group.group} className="border-b border-gray-600 pb-2 last:border-b-0">
+                        <div className="text-xs text-blue-400 font-bold mb-1">{group.group}</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {group.strikes.map((strike) => (
+                            <label 
+                              key={strike} 
+                              className={`flex items-center space-x-2 p-2 rounded cursor-pointer transition-colors ${
+                                qtpSelectedStrikes[strike] ? 'bg-blue-600' : 'bg-gray-600 hover:bg-gray-500'
+                              }`}
+                            >
+                              <input 
+                                type="checkbox" 
+                                checked={qtpSelectedStrikes[strike] || false}
+                                onChange={(e) => setQtpSelectedStrikes(prev => ({ ...prev, [strike]: e.target.checked }))}
+                                className="w-4 h-4 accent-blue-500" 
+                              />
+                              <span className="text-sm text-white font-mono">{strike}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
                   <div className="text-xs text-gray-400 mt-2">
-                    Selected: {Object.values(qtpStrikes).filter(v => v).length} / {Object.keys(qtpStrikes).length}
+                    Selected: {Object.values(qtpSelectedStrikes).filter(v => v).length} / 10 strikes
                   </div>
                 </div>
               </div>
 
               {/* Back Test Results */}
               <div className="border-t border-gray-600 mt-6 pt-4">
-                <h4 className="text-sm text-gray-300 mb-3 font-bold">📊 Back Test Results</h4>
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="text-sm text-gray-300 font-bold">📊 Back Test Results</h4>
+                  <button className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors">
+                    Run Backtest
+                  </button>
+                </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="bg-gray-700 rounded p-3 text-center">
                     <div className="text-xs text-gray-400">Total Trades</div>

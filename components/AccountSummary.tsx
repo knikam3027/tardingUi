@@ -2,10 +2,37 @@
 
 import React, { useState, useEffect } from 'react';
 
+interface Account {
+  id: string;
+  name: string;
+  broker: string;
+  capital: string;
+  dayPnl: string;
+  totalPnl: string;
+  margin: string;
+  isActive: boolean;
+}
+
 const AccountSummary = ({ className = "" }: { className?: string }) => {
   const [mounted, setMounted] = useState(false);
   const [mtmTrailing1, setMtmTrailing1] = useState('50');
   const [mtmTrailing2, setMtmTrailing2] = useState('100');
+  const [showAddAccount, setShowAddAccount] = useState(false);
+  const [newAccountName, setNewAccountName] = useState('');
+  const [newAccountBroker, setNewAccountBroker] = useState('Zerodha');
+  const [accounts, setAccounts] = useState<Account[]>([
+    {
+      id: '1',
+      name: 'Primary Account',
+      broker: 'Zerodha',
+      capital: '234831',
+      dayPnl: '31681',
+      totalPnl: '35347',
+      margin: '199484',
+      isActive: true
+    }
+  ]);
+  const [activeAccountId, setActiveAccountId] = useState('1');
   
   useEffect(() => {
     setMounted(true);
@@ -61,8 +88,147 @@ const AccountSummary = ({ className = "" }: { className?: string }) => {
     // Implementation for booking trade
   };
 
+  const addAccount = () => {
+    if (!newAccountName.trim()) return;
+    
+    const newAccount: Account = {
+      id: Date.now().toString(),
+      name: newAccountName,
+      broker: newAccountBroker,
+      capital: '100000',
+      dayPnl: '0',
+      totalPnl: '0',
+      margin: '100000',
+      isActive: true
+    };
+    
+    setAccounts([...accounts, newAccount]);
+    setNewAccountName('');
+    setShowAddAccount(false);
+  };
+
+  const removeAccount = (id: string) => {
+    if (accounts.length <= 1) {
+      alert('Cannot remove the last account');
+      return;
+    }
+    setAccounts(accounts.filter(acc => acc.id !== id));
+    if (activeAccountId === id) {
+      setActiveAccountId(accounts.find(acc => acc.id !== id)?.id || '1');
+    }
+  };
+
+  const activeAccount = accounts.find(acc => acc.id === activeAccountId) || accounts[0];
+
   return (
     <div className={`border border-gray-700 bg-[#111827] rounded-md overflow-hidden ${className}`}>
+      {/* Account Selector Section */}
+      <div className="bg-[#1f2937] border-b border-gray-700 px-3 py-2">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-400">Account:</span>
+            <select
+              value={activeAccountId}
+              onChange={(e) => setActiveAccountId(e.target.value)}
+              className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-400"
+            >
+              {accounts.map(acc => (
+                <option key={acc.id} value={acc.id}>
+                  {acc.name} ({acc.broker})
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowAddAccount(!showAddAccount)}
+              className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs rounded transition-colors"
+            >
+              + Add Account
+            </button>
+            {accounts.length > 1 && (
+              <button
+                onClick={() => removeAccount(activeAccountId)}
+                className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded transition-colors"
+              >
+                Remove
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Add Account Form */}
+        {showAddAccount && (
+          <div className="mt-3 p-3 bg-gray-800 rounded border border-gray-600">
+            <div className="text-xs text-gray-300 font-bold mb-2">Add New Account</div>
+            <div className="flex flex-wrap gap-2 items-end">
+              <div>
+                <label className="block text-[10px] text-gray-400 mb-1">Account Name</label>
+                <input
+                  type="text"
+                  value={newAccountName}
+                  onChange={(e) => setNewAccountName(e.target.value)}
+                  placeholder="e.g., Account 2"
+                  className="w-32 bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-400"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] text-gray-400 mb-1">Broker</label>
+                <select
+                  value={newAccountBroker}
+                  onChange={(e) => setNewAccountBroker(e.target.value)}
+                  className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-400"
+                >
+                  <option value="Zerodha">Zerodha</option>
+                  <option value="Angel One">Angel One</option>
+                  <option value="Upstox">Upstox</option>
+                  <option value="Groww">Groww</option>
+                  <option value="ICICI Direct">ICICI Direct</option>
+                  <option value="HDFC Securities">HDFC Securities</option>
+                  <option value="5Paisa">5Paisa</option>
+                  <option value="Kotak">Kotak</option>
+                </select>
+              </div>
+              <button
+                onClick={addAccount}
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded transition-colors"
+              >
+                Add
+              </button>
+              <button
+                onClick={() => setShowAddAccount(false)}
+                className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Account List (when multiple) */}
+        {accounts.length > 1 && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {accounts.map(acc => (
+              <div
+                key={acc.id}
+                onClick={() => setActiveAccountId(acc.id)}
+                className={`px-2 py-1 rounded text-[10px] cursor-pointer transition-colors ${
+                  acc.id === activeAccountId
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                {acc.name}
+                <span className={`ml-1 ${parseFloat(acc.dayPnl) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  ₹{parseFloat(acc.dayPnl).toLocaleString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="overflow-x-auto">
         <table className="w-full text-[11px] lg:text-xs border-collapse min-w-[750px]">
           <thead className="bg-[#1f2937]">
@@ -147,19 +313,23 @@ const AccountSummary = ({ className = "" }: { className?: string }) => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 px-3 py-2">
             <div className="flex flex-col">
               <span className="text-gray-400 text-[10px]">CAPITAL</span>
-              <span className="text-green-400 font-bold">₹234,831</span>
+              <span className="text-green-400 font-bold">₹{parseFloat(activeAccount.capital).toLocaleString()}</span>
             </div>
             <div className="flex flex-col">
               <span className="text-gray-400 text-[10px]">DAY P&L</span>
-              <span className="text-green-400 font-bold">₹31,681</span>
+              <span className={`font-bold ${parseFloat(activeAccount.dayPnl) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                ₹{parseFloat(activeAccount.dayPnl).toLocaleString()}
+              </span>
             </div>
             <div className="flex flex-col">
               <span className="text-gray-400 text-[10px]">TOTAL P&L</span>
-              <span className="text-green-400 font-bold">₹35,347</span>
+              <span className={`font-bold ${parseFloat(activeAccount.totalPnl) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                ₹{parseFloat(activeAccount.totalPnl).toLocaleString()}
+              </span>
             </div>
             <div className="flex flex-col">
               <span className="text-gray-400 text-[10px]">AVAILABLE MARGIN</span>
-              <span className="text-blue-400 font-bold">₹199,484</span>
+              <span className="text-blue-400 font-bold">₹{parseFloat(activeAccount.margin).toLocaleString()}</span>
             </div>
           </div>
 

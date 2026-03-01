@@ -279,7 +279,7 @@ export default function StrategySettingsModal({
   const [longLots, setLongLots] = useState('6');
   const [maxLongTrades, setMaxLongTrades] = useState('1');
   const [longStartTime, setLongStartTime] = useState('09:30');
-  const [strictEntry, setStrictEntry] = useState(true);
+  const [ignoreLogicLong, setIgnoreLogicLong] = useState(true);
   const [longAdx, setLongAdx] = useState('20');
   const [longTimeExit, setLongTimeExit] = useState(true);
   const [longExitTime, setLongExitTime] = useState({ h: '15', m: '10' });
@@ -309,6 +309,10 @@ export default function StrategySettingsModal({
   const [vwmaLength, setVwmaLength] = useState('35');
   const [showMomLabels, setShowMomLabels] = useState(false);
   const [showDirLabels, setShowDirLabels] = useState(false);
+
+  // Strategy Tag
+  const [strategyTag, setStrategyTag] = useState('Yuvi-N-Short/Long');
+  const [strategyTagColor, setStrategyTagColor] = useState('#3b82f6');
 
   // Strategy Lag
   const [strategyLagValue, setStrategyLagValue] = useState('0');
@@ -975,7 +979,7 @@ export default function StrategySettingsModal({
                     />
                   </div>
 
-                  {/* Long Start Time */}
+                  {/* Long Start Time & Ignore Logic */}
                   <div className="flex items-center gap-3">
                     <label className="text-[#d1d4dc] min-w-[100px]">Long Start Time</label>
                     <input 
@@ -983,18 +987,15 @@ export default function StrategySettingsModal({
                       value={longStartTime}
                       onChange={(e) => setLongStartTime(e.target.value)}
                       className="bg-[#2a2e39] border border-[#3a3e49] rounded px-3 py-1 text-[#d1d4dc] w-20"
+                      placeholder="HH:MM"
                     />
-                  </div>
-
-                  {/* Strict Entry */}
-                  <div className="flex items-center gap-3">
                     <input 
                       type="checkbox" 
-                      checked={strictEntry}
-                      onChange={(e) => setStrictEntry(e.target.checked)}
-                      className="w-4 h-4"
+                      checked={ignoreLogicLong}
+                      onChange={(e) => setIgnoreLogicLong(e.target.checked)}
+                      className="w-4 h-4 ml-4"
                     />
-                    <label className="text-[#d1d4dc]">Strict Entry</label>
+                    <label className="text-[#d1d4dc]">Ignore logic - Consider start time</label>
                   </div>
 
                   {/* ADX */}
@@ -1263,10 +1264,46 @@ export default function StrategySettingsModal({
                 </div>
               </div>
 
-              {/* ========== 7. STRATEGY LAG ========== */}
+              {/* ========== 7. STRATEGY TAG ========== */}
               <div>
                 <div className="text-xs text-[#787b86] font-semibold uppercase mb-4">
-                  ========== 7. STRATEGY LAG ==========
+                  ========== 7. STRATEGY TAG ==========
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <label className="text-[#d1d4dc] min-w-[100px]">Strategy Tag</label>
+                    <input 
+                      type="text" 
+                      value={strategyTag}
+                      onChange={(e) => setStrategyTag(e.target.value)}
+                      className="bg-[#2a2e39] border border-[#3a3e49] rounded px-3 py-1 text-[#d1d4dc] w-64"
+                      placeholder="Enter strategy tag name"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <label className="text-[#d1d4dc] min-w-[100px]">Tag Color</label>
+                    <input 
+                      type="color" 
+                      value={strategyTagColor}
+                      onChange={(e) => setStrategyTagColor(e.target.value)}
+                      className="bg-[#2a2e39] border border-[#3a3e49] rounded w-10 h-8 cursor-pointer"
+                    />
+                    <div 
+                      className="px-3 py-1 rounded text-white text-xs font-medium"
+                      style={{ backgroundColor: strategyTagColor }}
+                    >
+                      {strategyTag || 'Preview'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ========== 8. STRATEGY LAG ========== */
+              <div>
+                <div className="text-xs text-[#787b86] font-semibold uppercase mb-4">
+                  ========== 8. STRATEGY LAG ==========
                 </div>
                 
                 <div className="space-y-4">
@@ -1294,10 +1331,10 @@ export default function StrategySettingsModal({
                 </div>
               </div>
 
-              {/* ========== 8. CAPITAL ========== */}
+              {/* ========== 9. CAPITAL ========== */}
               <div>
                 <div className="text-xs text-[#787b86] font-semibold uppercase mb-4">
-                  ========== 8. CAPITAL ==========
+                  ========== 9. CAPITAL ==========
                 </div>
                 
                 <div className="space-y-4">

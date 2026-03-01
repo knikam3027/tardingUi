@@ -1,13 +1,165 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import TradingPanel from './TradingPanel';
+
+// Manual Trade Popup Component
+interface ManualTradePopupProps {
+  isOpen: boolean;
+  onClose: () => void;
+  strike: string;
+  ceLTP: string;
+  peLTP: string;
+  spotPrice: string;
+}
+
+const ManualTradePopup: React.FC<ManualTradePopupProps> = ({
+  isOpen,
+  onClose,
+  strike,
+  ceLTP,
+  peLTP,
+  spotPrice
+}) => {
+  const [selectedTypes, setSelectedTypes] = useState({ call: true, put: false });
+  const [quantity, setQuantity] = useState('1');
+
+  const handleTypeToggle = (type: 'call' | 'put') => {
+    setSelectedTypes(prev => ({ ...prev, [type]: !prev[type] }));
+  };
+
+  const executeAction = (action: 'LE' | 'LX' | 'SE' | 'SX') => {
+    const actionNames: Record<string, string> = {
+      'LE': 'Long Entry',
+      'LX': 'Long Exit',
+      'SE': 'Short Entry',
+      'SX': 'Short Exit'
+    };
+    const types = [];
+    if (selectedTypes.call) types.push('CE');
+    if (selectedTypes.put) types.push('PE');
+    
+    alert(`✅ ${actionNames[action]} executed!\nStrike: ${strike}\nType(s): ${types.join(', ')}\nQuantity: ${quantity} lots`);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-[#1a365d] border border-gray-600 rounded-lg shadow-xl w-72 text-white">
+        {/* Header with CALL/PUT checkboxes */}
+        <div className="flex justify-between items-center px-3 py-2 border-b border-gray-600">
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-1 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selectedTypes.call}
+                onChange={() => handleTypeToggle('call')}
+                className="w-4 h-4 accent-blue-500"
+              />
+              <span className="text-sm font-semibold text-blue-300">CALL</span>
+            </label>
+            <label className="flex items-center gap-1 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={selectedTypes.put}
+                onChange={() => handleTypeToggle('put')}
+                className="w-4 h-4 accent-red-500"
+              />
+              <span className="text-sm font-semibold text-red-300">PUT</span>
+            </label>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white text-lg font-bold leading-none"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Action Buttons Grid */}
+        <div className="p-3 space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => executeAction('LE')}
+              className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded transition-colors"
+            >
+              LE
+            </button>
+            <button
+              onClick={() => executeAction('LX')}
+              className="px-3 py-2 bg-green-700 hover:bg-green-800 text-white text-sm font-bold rounded transition-colors"
+            >
+              LX
+            </button>
+            <button
+              onClick={() => executeAction('SX')}
+              className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded transition-colors"
+            >
+              SX
+            </button>
+            <button
+              onClick={() => executeAction('SE')}
+              className="px-3 py-2 bg-red-700 hover:bg-red-800 text-white text-sm font-bold rounded transition-colors"
+            >
+              SE
+            </button>
+          </div>
+
+          {/* Quantity Input */}
+          <div className="flex items-center gap-2 mt-2">
+            <label className="text-xs text-gray-300">Qty:</label>
+            <input
+              type="number"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
+              min="1"
+              className="flex-1 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-sm text-white w-16 focus:outline-none focus:border-blue-400"
+            />
+          </div>
+
+          {/* Price Info */}
+          <div className="bg-gray-800 rounded p-2 mt-2 space-y-1 text-xs">
+            <div className="flex justify-between">
+              <span className="text-gray-400">Price</span>
+              <span className="text-yellow-400 font-semibold">{spotPrice}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Strike(CE)</span>
+              <span className="text-blue-400 font-semibold">{strike}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Strike(PE)</span>
+              <span className="text-red-400 font-semibold">{strike}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">CE LTP</span>
+              <span className="text-blue-300 font-semibold">₹{ceLTP}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">PE LTP</span>
+              <span className="text-red-300 font-semibold">₹{peLTP}</span>
+            </div>
+          </div>
+
+          {/* Show Trade List Button */}
+          <button
+            onClick={() => alert('Trade list opened')}
+            className="w-full px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold rounded transition-colors mt-2"
+          >
+            Show Trade List
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const StrikePricesTable = ({ className = "" }: { className?: string }) => {
   const [mounted, setMounted] = useState(false);
   const [showManualPopup, setShowManualPopup] = useState(false);
-  const [manualTradeType, setManualTradeType] = useState<'CE' | 'PE'>('CE');
-  const [selectedStrike, setSelectedStrike] = useState('25850');
+  const [manualPopupData, setManualPopupData] = useState<{strike: string; ce: string; pe: string; ltp: string} | null>(null);
+  const [manualCheckboxState, setManualCheckboxState] = useState<{[key: string]: {ce: boolean; pe: boolean}}>({});
   const [trailingSLValues, setTrailingSLValues] = useState<{[key: string]: string}>({});
   const [mtmValues, setMtmValues] = useState<{[key: string]: string}>({});
 
@@ -122,13 +274,21 @@ const StrikePricesTable = ({ className = "" }: { className?: string }) => {
     }
   ];
 
-  const handleManualTrade = (strike: string) => {
-    setSelectedStrike(strike);
-    setShowManualPopup(true);
-  };
-
-  const handleTradeTypeChange = (type: 'CE' | 'PE') => {
-    setManualTradeType(type);
+  const handleManualCheckbox = (strike: string, type: 'ce' | 'pe', row: typeof strikeData[0]) => {
+    const currentState = manualCheckboxState[strike] || { ce: false, pe: false };
+    const newState = { ...currentState, [type]: !currentState[type] };
+    setManualCheckboxState({ ...manualCheckboxState, [strike]: newState });
+    
+    // If any checkbox is checked, show popup
+    if (newState.ce || newState.pe) {
+      setManualPopupData({
+        strike: row.strike,
+        ce: row.ce,
+        pe: row.pe,
+        ltp: row.ltp
+      });
+      setShowManualPopup(true);
+    }
   };
 
   return (
@@ -208,30 +368,24 @@ const StrikePricesTable = ({ className = "" }: { className?: string }) => {
                 {/* MANUAL Column */}
                 <td className="px-2 py-1">
                   <div className="flex items-center space-x-1">
-                    <label className="flex items-center space-x-1">
+                    <label className="flex items-center space-x-1 cursor-pointer">
                       <input 
                         type="checkbox" 
-                        checked={manualTradeType === 'CE'}
-                        onChange={() => handleTradeTypeChange('CE')}
-                        className="w-3 h-3 text-blue-600 rounded" 
+                        checked={manualCheckboxState[row.strike]?.ce || false}
+                        onChange={() => handleManualCheckbox(row.strike, 'ce', row)}
+                        className="w-3 h-3 accent-blue-500" 
                       />
                       <span className="text-[10px] text-blue-400">CE</span>
                     </label>
-                    <label className="flex items-center space-x-1">
+                    <label className="flex items-center space-x-1 cursor-pointer">
                       <input 
                         type="checkbox" 
-                        checked={manualTradeType === 'PE'}
-                        onChange={() => handleTradeTypeChange('PE')}
-                        className="w-3 h-3 text-red-600 rounded" 
+                        checked={manualCheckboxState[row.strike]?.pe || false}
+                        onChange={() => handleManualCheckbox(row.strike, 'pe', row)}
+                        className="w-3 h-3 accent-red-500" 
                       />
                       <span className="text-[10px] text-red-400">PE</span>
                     </label>
-                    <button
-                      onClick={() => handleManualTrade(row.strike)}
-                      className="text-[10px] bg-blue-600 hover:bg-blue-700 text-white px-2 py-0.5 rounded transition-colors"
-                    >
-                      Trade
-                    </button>
                   </div>
                 </td>
               </tr>
@@ -239,16 +393,17 @@ const StrikePricesTable = ({ className = "" }: { className?: string }) => {
           </tbody>
         </table>
 
-        {/* Enhanced Trading Panel */}
-        <TradingPanel
+        {/* Manual Trade Popup */}
+        <ManualTradePopup
           isOpen={showManualPopup}
-          onClose={() => setShowManualPopup(false)}
-          selectedStrike={selectedStrike}
-          optionType={manualTradeType}
-          currentLTP={manualTradeType === 'CE' 
-            ? strikeData.find(s => s.strike === selectedStrike)?.ce || '0'
-            : strikeData.find(s => s.strike === selectedStrike)?.pe || '0'
-          }
+          onClose={() => {
+            setShowManualPopup(false);
+            setManualCheckboxState({});
+          }}
+          strike={manualPopupData?.strike || '25850'}
+          ceLTP={manualPopupData?.ce || '128.75'}
+          peLTP={manualPopupData?.pe || '210.60'}
+          spotPrice={manualPopupData?.ltp || '25850.00'}
         />
 
         {/* Indicators Footer */}
