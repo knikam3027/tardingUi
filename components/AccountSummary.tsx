@@ -34,6 +34,17 @@ const AccountSummary = ({ className = "" }: { className?: string }) => {
   ]);
   const [activeAccountId, setActiveAccountId] = useState('1');
   
+  // Trigger popup state
+  const [triggerPopup, setTriggerPopup] = useState<{
+    show: boolean;
+    index: number;
+    trigger: string;
+    strike: string;
+    price: string;
+    position: { x: number; y: number };
+  } | null>(null);
+  const [triggerCallPut, setTriggerCallPut] = useState({ call: true, put: false });
+  
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -83,9 +94,38 @@ const AccountSummary = ({ className = "" }: { className?: string }) => {
     }
   ];
 
-  const handleBookTrade = (index: number) => {
-    console.log(`Booking trade at index ${index}`);
-    // Implementation for booking trade
+  const handleBookTrade = (index: number, event: React.MouseEvent, trade: typeof tradeData[0]) => {
+    event.stopPropagation();
+    const rect = (event.target as HTMLElement).getBoundingClientRect();
+    
+    // Toggle popup - if same trigger clicked, close it
+    if (triggerPopup?.index === index) {
+      setTriggerPopup(null);
+      return;
+    }
+    
+    setTriggerPopup({
+      show: true,
+      index,
+      trigger: trade.trigger,
+      strike: trade.strike,
+      price: trade.price,
+      position: { x: rect.left, y: rect.bottom + 5 }
+    });
+  };
+  
+  const executeTriggerAction = (action: 'LE' | 'LX' | 'SX' | 'SE') => {
+    const actionNames: Record<string, string> = {
+      'LE': 'Long Entry',
+      'LX': 'Long Exit',
+      'SX': 'Short Exit',
+      'SE': 'Short Entry'
+    };
+    const types = [];
+    if (triggerCallPut.call) types.push('CALL');
+    if (triggerCallPut.put) types.push('PUT');
+    
+    alert(`✅ ${actionNames[action]} executed!\nStrike: ${triggerPopup?.strike}\nType(s): ${types.join(', ')}\nPrice: ${triggerPopup?.price}`);
   };
 
   const addAccount = () => {
@@ -268,9 +308,9 @@ const AccountSummary = ({ className = "" }: { className?: string }) => {
                     trade.trigger === 'OLD' ? 'bg-yellow-500' : 'bg-blue-500 text-white'
                   }`}>
                     <button
-                      onClick={() => handleBookTrade(i)}
+                      onClick={(e) => handleBookTrade(i, e, trade)}
                       className="w-full px-1 py-0.5 hover:opacity-80"
-                      title="Click to book trade"
+                      title="Click to open trade panel"
                     >
                       {trade.trigger}
                     </button>
@@ -288,7 +328,7 @@ const AccountSummary = ({ className = "" }: { className?: string }) => {
           <div className="flex items-center space-x-4 text-[11px]">
             <span className="text-gray-400">MTM Trailing:</span>
             <div className="flex items-center space-x-2">
-              <span className="text-gray-300">Level 1:</span>
+              <span className="text-gray-300">Target:</span>
               <input
                 type="text"
                 value={mtmTrailing1}
@@ -297,7 +337,7 @@ const AccountSummary = ({ className = "" }: { className?: string }) => {
               />
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-gray-300">Level 2:</span>
+              <span className="text-gray-300">SL:</span>
               <input
                 type="text"
                 value={mtmTrailing2}
@@ -339,6 +379,101 @@ const AccountSummary = ({ className = "" }: { className?: string }) => {
           </div>
         </div>
       </div>
+
+      {/* Trigger Popup (no background overlay) */}
+      {triggerPopup?.show && (
+        <div 
+          className="fixed z-50 bg-[#c0c8d4] border-2 border-blue-600 rounded shadow-xl"
+          style={{ 
+            left: Math.min(triggerPopup.position.x, window.innerWidth - 200),
+            top: triggerPopup.position.y 
+          }}
+        >
+          {/* Header with CALL/PUT checkboxes */}
+          <div className="flex items-center justify-between px-3 py-2 border-b border-gray-400">
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-1 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={triggerCallPut.call}
+                  onChange={() => setTriggerCallPut(prev => ({ ...prev, call: !prev.call }))}
+                  className="w-4 h-4 accent-blue-600"
+                />
+                <span className="text-sm font-bold text-blue-800">CALL</span>
+              </label>
+              <label className="flex items-center gap-1 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={triggerCallPut.put}
+                  onChange={() => setTriggerCallPut(prev => ({ ...prev, put: !prev.put }))}
+                  className="w-4 h-4 accent-blue-600"
+                />
+                <span className="text-sm font-bold text-blue-800">PUT</span>
+              </label>
+            </div>
+            <button
+              onClick={() => setTriggerPopup(null)}
+              className="text-gray-600 hover:text-black text-lg font-bold leading-none ml-2"
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="p-3 space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => executeTriggerAction('LE')}
+                className="px-4 py-2 bg-white hover:bg-blue-50 text-blue-700 font-bold text-sm border border-gray-300 rounded transition-colors"
+              >
+                LE
+              </button>
+              <button
+                onClick={() => executeTriggerAction('LX')}
+                className="px-4 py-2 bg-white hover:bg-blue-50 text-blue-700 font-bold text-sm border border-gray-300 rounded transition-colors"
+              >
+                LX
+              </button>
+              <button
+                onClick={() => executeTriggerAction('SX')}
+                className="px-4 py-2 bg-white hover:bg-red-50 text-red-700 font-bold text-sm border border-gray-300 rounded transition-colors"
+              >
+                SX
+              </button>
+              <button
+                onClick={() => executeTriggerAction('SE')}
+                className="px-4 py-2 bg-white hover:bg-red-50 text-red-700 font-bold text-sm border border-gray-300 rounded transition-colors"
+              >
+                SE
+              </button>
+            </div>
+
+            {/* Price Info */}
+            <div className="bg-white rounded p-2 mt-2 space-y-1 text-xs border border-gray-300">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Price</span>
+                <span className="text-black font-semibold">25213.45</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Strike(CE)</span>
+                <span className="text-black font-semibold">25200</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Strike(PE)</span>
+                <span className="text-black font-semibold">25200</span>
+              </div>
+            </div>
+
+            {/* Exit All Button */}
+            <button
+              onClick={() => alert('Trade list opened')}
+              className="w-full px-3 py-2 bg-[#4a6fa5] hover:bg-[#3d5d8a] text-white text-sm font-bold rounded transition-colors mt-2"
+            >
+              Exit All
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
