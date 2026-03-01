@@ -1300,7 +1300,7 @@ export default function StrategySettingsModal({
                 </div>
               </div>
 
-              {/* ========== 8. STRATEGY LAG ========== */
+              {/* ========== 8. STRATEGY LAG ========== */}
               <div>
                 <div className="text-xs text-[#787b86] font-semibold uppercase mb-4">
                   ========== 8. STRATEGY LAG ==========
